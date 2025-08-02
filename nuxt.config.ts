@@ -21,9 +21,15 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
-  }, 
+  },
 
   supabase: {
-    redirect: false
+    redirect: false,
+    // Configure email confirmation redirect
+    redirectOptions: {
+      login: '/auth/login',
+      callback: '/auth/confirm',
+      exclude: ['/auth/signup', '/auth/confirm']
+    }
   }
 })

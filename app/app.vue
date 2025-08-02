@@ -23,6 +23,14 @@ useSeoMeta({
   twitterImage: 'https://assets.hub.nuxt.com/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJodHRwczovL3VpLXByby1zdGFydGVyLm51eHQuZGV2IiwiaWF0IjoxNzM5NDYzMzk4fQ.XLzPkSW6nRbPW07QO1RkMwz_RAPA4KfeyrWrK3li9YI.jpg?theme=light',
   twitterCard: 'summary_large_image'
 })
+
+const client = useSupabaseClient()
+const user = useSupabaseUser()
+
+const logout = async () => {
+  await client.auth.signOut()
+  navigateTo('/auth/login')
+}
 </script>
 
 <template>
@@ -47,8 +55,26 @@ useSeoMeta({
           color="neutral"
           variant="ghost"
         />
+
+        <UButton
+          v-if="user"
+          variant="ghost"
+          color="gray"
+          @click="logout"
+        >
+          Logout
+        </UButton>
+        <UButton
+          v-else
+          to="/auth/login"
+        >
+          Login
+        </UButton>
       </template>
     </UHeader>
+
+    <!-- Email Verification Banner -->
+    <AuthVerificationBanner />
 
     <UMain>
       <NuxtPage />
