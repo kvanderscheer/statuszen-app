@@ -13,6 +13,8 @@ export interface UserProfile {
   company?: string
   plan: 'free' | 'pro' | 'enterprise'
   emailVerified: boolean
+  phoneNumber?: string
+  timezone: string
   createdAt: string
   updatedAt: string
 }
@@ -24,6 +26,8 @@ export interface UserProfileRecord {
   company: string | null
   plan: 'free' | 'pro' | 'enterprise'
   email_verified: boolean
+  phone_number?: string | null
+  timezone: string
   avatar_url?: string | null
   created_at?: string
   updated_at?: string
@@ -59,3 +63,35 @@ export interface Plan {
   popular?: boolean
   available: boolean
 }
+
+// Profile update data
+export interface ProfileUpdateData {
+  fullName?: string
+  company?: string
+  phoneNumber?: string
+  timezone?: string
+}
+
+// Profile update database record
+export interface ProfileUpdateRecord {
+  full_name?: string
+  company?: string | null
+  phone_number?: string | null
+  timezone?: string
+}
+
+// Timezone definition
+export interface TimezoneOption {
+  value: string
+  label: string
+  group: string
+}
+
+// Common timezones grouped by region
+export type TimezoneGroup = 
+  | 'America'
+  | 'Europe'
+  | 'Asia'
+  | 'Africa'
+  | 'Australia'
+  | 'Pacific'

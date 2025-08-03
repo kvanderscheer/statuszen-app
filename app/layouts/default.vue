@@ -7,24 +7,9 @@ const toast = useToast()
 const open = ref(false)
 
 const links = [[{
-  label: 'Home',
-  icon: 'i-lucide-house',
-  to: '/',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/inbox',
-  badge: '4',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-users',
-  to: '/customers',
+  label: 'Dashboard',
+  icon: 'i-lucide-layout-dashboard',
+  to: '/dashboard',
   onSelect: () => {
     open.value = false
   }
@@ -111,7 +96,7 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+        <!-- <TeamsMenu :collapsed="collapsed" /> -->
       </template>
 
       <template #default="{ collapsed }">
@@ -144,13 +129,13 @@ onMounted(async () => {
 
     <UDashboardSearch :groups="groups" />
 
-    <div class="flex-1 flex flex-col">
-      <AppHeader @search="handleGlobalSearch" />
-      <main class="flex-1">
+    <div class="flex-1 flex flex-col min-h-0">
+<!--       <AppHeader @search="handleGlobalSearch" /> -->
+      <main class="flex-1 overflow-y-auto">
         <slot />
       </main>
     </div>
 
-    <NotificationsSlideover />
+    <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
 </template>

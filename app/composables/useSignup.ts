@@ -36,7 +36,8 @@ export const useSignup = () => {
         full_name: data.fullName,
         company: data.company || null,
         plan: data.plan,
-        email_verified: false
+        email_verified: false,
+        timezone: 'UTC'
       }
 
       const { error } = await supabase

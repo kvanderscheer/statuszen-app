@@ -30,6 +30,12 @@ export default defineNuxtConfig({
       login: '/auth/login',
       callback: '/auth/confirm',
       exclude: ['/auth/signup', '/auth/confirm']
+    },
+    // Ensure cookies are properly set for server-side auth
+    cookieOptions: {
+      maxAge: 60 * 60 * 8, // 8 hours
+      sameSite: 'lax',
+      secure: false // Set to true in production with HTTPS
     }
   }
 })
