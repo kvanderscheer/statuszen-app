@@ -2,6 +2,10 @@
 import type { SignupFormData } from '~/types/auth'
 import { getPasswordStrength } from '~/utils/validation'
 
+definePageMeta({
+  layout: 'empty'
+})
+
 // Redirect if already logged in
 const user = useSupabaseUser()
 watchEffect(() => {
@@ -18,8 +22,6 @@ const formData = reactive<SignupFormData>({
   email: '',
   password: '',
   fullName: '',
-  company: '',
-  plan: 'free'
 })
 
 const showPassword = ref(false)
@@ -48,14 +50,6 @@ const fields = [
     placeholder: 'Enter your full name',
     required: true,
     icon: 'i-lucide-user'
-  },
-  {
-    name: 'company',
-    type: 'text' as const,
-    label: 'Company/Organization',
-    placeholder: 'Enter your company name (optional)',
-    required: false,
-    icon: 'i-lucide-building'
   }
 ]
 
@@ -112,190 +106,223 @@ useHead({
 </script>
 
 <template>
-  <UContainer class="min-h-[calc(100vh-var(--ui-header-height))] flex items-center justify-center px-4 py-8">
-    <UPageCard class="max-w-xl w-full">
-      <template #header>
-        <div class="text-center space-y-2">
+  <!-- Split Screen Layout -->
+  <div class="min-h-[calc(100vh-var(--ui-header-height))] flex flex-col md:flex-row">
+    <!-- Left Panel - Dark Form Area -->
+    <div class="w-full md:w-1/2 lg:w-2/5 bg-slate-900 flex flex-col min-h-screen md:min-h-[calc(100vh-var(--ui-header-height))]">
+      <!-- Logo Area -->
+      <div class="p-6 lg:p-8">
+        <NuxtLink to="/" class="flex items-center space-x-2">
           <UIcon
-            name="i-lucide-user-plus"
-            class="w-8 h-8 text-primary mx-auto"
+            name="i-heroicons-sparkles"
+            class="w-6 h-6 lg:w-8 lg:h-8 text-primary-500"
           />
-          <h1 class="text-2xl font-bold text-default">
-            Create Your Account
-          </h1>
-          <p class="text-sm text-muted">
-            Join StatusZen and start monitoring your services
-          </p>
-        </div>
-      </template>
+          <span class="text-lg lg:text-xl font-bold text-white">StatusZen</span>
+        </NuxtLink>
+      </div>
 
-      <UForm
-        class="space-y-6"
-        :state="formData"
-        @submit="onSubmit"
-      >
-        <!-- Personal Information Section -->
-        <div class="space-y-4">
-          <h3 class="text-sm font-semibold text-default border-b border-default pb-2">
-            Personal Information
-          </h3>
-
-          <div
-            v-for="field in fields"
-            :key="field.name"
-            class="space-y-1"
-          >
-            <UFormField
-              :name="field.name"
-              :label="field.label"
-              :required="field.required"
-              :error="getFieldError(field.name) || undefined"
-            >
-              <UInput
-                v-model="formData[field.name as keyof SignupFormData]"
-                class="w-full"
-                :type="field.type"
-                :placeholder="field.placeholder"
-                :icon="field.icon"
-                size="lg"
-                :disabled="isLoading"
-                autocomplete="off"
-              />
-            </UFormField>
+      <!-- Form Content -->
+      <div class="flex-1 flex items-center justify-center px-6 lg:px-8 pb-6 lg:pb-8">
+        <div class="w-full max-w-md">
+          <!-- Header -->
+          <div class="text-center space-y-2 mb-8">
+            <h1 class="text-3xl font-bold text-white">
+              Create your <span class="text-blue-500">free</span> account
+            </h1>
+            <p class="text-sm text-slate-300">
+              Join StatusZen and start monitoring your services
+            </p>
           </div>
-        </div>
 
-        <!-- Password Section -->
-        <div class="space-y-4">
-          <h3 class="text-sm font-semibold text-default border-b border-default pb-2">
-            Account Security
-          </h3>
-
-          <UFormField
-            name="password"
-            label="Password"
-            required
-            :error="getFieldError('password') || undefined"
+          <!-- Form -->
+          <UForm
+            class="space-y-6"
+            :state="formData"
+            @submit="onSubmit"
           >
-            <UInput
-              v-model="formData.password"
-              class="w-full"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="Create a strong password"
-              icon="i-lucide-lock"
-              size="lg"
-              :disabled="isLoading"
-              autocomplete="new-password"
-              block
-            >
-              <template #trailing>
-                <UButton
-                  variant="ghost"
-                  color="neutral"
-                  size="xs"
-                  :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  @click="showPassword = !showPassword"
-                />
-              </template>
-            </UInput>
-          </UFormField>
+            <!-- Personal Information Section -->
+            <div class="space-y-4">
 
-          <!-- Password Strength Indicator -->
-          <div
-            v-if="formData.password"
-            class="space-y-2"
-          >
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted">Password Strength</span>
-              <span :class="`text-${passwordStrength.color}-500 font-medium`">
-                {{ passwordStrength.label }}
-              </span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-1">
               <div
-                class="h-1 rounded-full transition-all duration-300"
-                :class="`bg-${passwordStrength.color}-500`"
-                :style="{ width: `${passwordStrength.strength}%` }"
-              />
+                v-for="field in fields"
+                :key="field.name"
+                class="space-y-1"
+              >
+                <UFormField
+                  :name="field.name"
+                  :label="field.label"
+                  :required="field.required"
+                  :error="getFieldError(field.name) || undefined"
+                  class="[&_label]:text-slate-300 [&_.text-red-500]:text-red-400"
+                >
+                  <UInput
+                    v-model="formData[field.name as keyof SignupFormData]"
+                    class="w-full [&_input]:bg-slate-800 [&_input]:border-slate-700 [&_input]:text-white [&_input]:placeholder-slate-400"
+                    :type="field.type"
+                    :placeholder="field.placeholder"
+                    :icon="field.icon"
+                    size="lg"
+                    :disabled="isLoading"
+                    autocomplete="off"
+                  />
+                </UFormField>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Plan Selection -->
-        <div class="space-y-4">
-          <h3 class="text-sm font-semibold text-default border-b border-default pb-2">
-            Choose Your Plan
-          </h3>
+            <!-- Password Section -->
+            <div class="space-y-4">
 
-          <AuthPlanSelection v-model="formData.plan" />
-        </div>
+              <UFormField
+                name="password"
+                label="Password"
+                required
+                :error="getFieldError('password') || undefined"
+                class="[&_label]:text-slate-300 [&_.text-red-500]:text-red-400"
+              >
+                <UInput
+                  v-model="formData.password"
+                  class="w-full [&_input]:bg-slate-800 [&_input]:border-slate-700 [&_input]:text-white [&_input]:placeholder-slate-400"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Create a strong password"
+                  icon="i-lucide-lock"
+                  size="lg"
+                  :disabled="isLoading"
+                  autocomplete="new-password"
+                  block
+                >
+                  <template #trailing>
+                    <UButton
+                      variant="ghost"
+                      color="neutral"
+                      size="xs"
+                      :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                      class="text-slate-400 hover:text-white"
+                      @click="showPassword = !showPassword"
+                    />
+                  </template>
+                </UInput>
+              </UFormField>
 
-        <!-- Terms and Conditions -->
-        <div class="space-y-4">
-          <UFormField
-            name="terms"
-            :error="undefined"
-          >
-            <UCheckbox
-              v-model="acceptTerms"
-              :disabled="isLoading"
-              class="flex items-start gap-3"
-            >
-              <template #label>
-                <span class="text-sm text-muted">
-                  I agree to the
-                  <UButton
-                    variant="link"
-                    class="p-0 text-sm h-auto"
-                    to="/terms"
-                    target="_blank"
-                  >
-                    Terms of Service
-                  </UButton>
-                  and
-                  <UButton
-                    variant="link"
-                    class="p-0 text-sm h-auto"
-                    to="/privacy"
-                    target="_blank"
-                  >
-                    Privacy Policy
-                  </UButton>
-                </span>
-              </template>
-            </UCheckbox>
-          </UFormField>
-        </div>
+              <!-- Password Strength Indicator -->
+              <div
+                v-if="formData.password"
+                class="space-y-2"
+              >
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-400">Password Strength</span>
+                  <span :class="`text-${passwordStrength.color}-400 font-medium`">
+                    {{ passwordStrength.label }}
+                  </span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-1">
+                  <div
+                    class="h-1 rounded-full transition-all duration-300"
+                    :class="`bg-${passwordStrength.color}-500`"
+                    :style="{ width: `${passwordStrength.strength}%` }"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <!-- Submit Button -->
-        <UButton
-          type="submit"
-          size="lg"
-          :loading="isLoading"
-          :disabled="!acceptTerms"
-          block
-          class="mt-6"
-        >
-          <template #leading>
-            <UIcon name="i-lucide-rocket" />
-          </template>
-          Create Account
-        </UButton>
+            <!-- Terms and Conditions -->
+            <div class="space-y-4">
+              <UFormField
+                name="terms"
+                :error="undefined"
+              >
+                <UCheckbox
+                  v-model="acceptTerms"
+                  :disabled="isLoading"
+                  class="flex items-start gap-3"
+                >
+                  <template #label>
+                    <span class="text-sm text-slate-300">
+                      I agree to the
+                      <UButton
+                        variant="link"
+                        class="p-0 text-sm h-auto"
+                        to="/terms"
+                        target="_blank"
+                      >
+                        terms of service
+                      </UButton>
+                      and
+                      <UButton
+                        variant="link"
+                        class="p-0 text-sm h-auto"
+                        to="/privacy"
+                        target="_blank"
+                      >
+                        privacy policy
+                      </UButton>
+                    </span>
+                  </template>
+                </UCheckbox>
+              </UFormField>
+            </div>
 
-        <!-- Login Link -->
-        <div class="text-center pt-4 border-t border-default">
-          <p class="text-sm text-muted">
-            Already have an account?
+            <!-- Submit Button -->
             <UButton
-              variant="link"
-              to="/auth/login"
-              class="p-0 text-sm h-auto"
+              type="submit"
+              size="lg"
+              :loading="isLoading"
+              :disabled="!acceptTerms"
+              block
+              class="mt-6 bg-orange-600 hover:bg-orange-700 text-white"
             >
-              Sign in here
+              <template #leading>
+                <UIcon name="i-lucide-rocket" />
+              </template>
+              Create Account
             </UButton>
-          </p>
+
+            <!-- Login Link -->
+            <div class="text-center pt-4 border-t border-slate-700">
+              <p class="text-sm text-slate-300">
+                Already have an account?
+                <UButton
+                  variant="link"
+                  color="primary"
+                  to="/auth/login"
+                  class="p-0 text-sm h-auto"
+                >
+                  Sign in here
+                </UButton>
+              </p>
+            </div>
+          </UForm>
         </div>
-      </UForm>
-    </UPageCard>
-  </UContainer>
+      </div>
+    </div>
+
+    <!-- Right Panel - Hero Background -->
+    <div class="hidden md:flex lg:w-3/5 md:w-1/2 items-center justify-center relative overflow-hidden min-h-screen">
+      <ParticleSystem />
+
+      <!-- Gradient Background -->
+      <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black" />
+
+      <!-- Promotional Badge -->
+<!--       <div class="absolute top-12 left-1/2 transform -translate-x-1/2 z-20">
+        <div class="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-full px-6 py-2">
+          <span class="text-blue-300 text-sm font-medium">20% off our annual plan</span>
+        </div>
+      </div>
+ -->
+      <!-- Main Content -->
+      <div class="relative z-10 text-center px-8 max-w-4xl">
+        <!-- Hero Title with Gradient -->
+        <h1 class="text-4xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
+          <span class="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+            Monitor & Share Your Service Status with Confidence
+          </span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-gray-300 text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed">
+          Beautiful status pages, real-time monitoring, and instant notifications to keep your team and customers informed.
+        </p>
+      </div>
+    </div>
+  </div>
 </template>
