@@ -296,11 +296,8 @@ useHead({
     </div>
 
     <!-- Right Panel - Hero Background -->
-    <div class="hidden md:flex lg:w-3/5 md:w-1/2 items-center justify-center relative overflow-hidden min-h-screen">
+    <div class="hidden md:flex lg:w-3/5 md:w-1/2 items-center justify-center relative overflow-hidden min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
       <ParticleSystem />
-
-      <!-- Gradient Background -->
-      <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black" />
 
       <!-- Promotional Badge -->
 <!--       <div class="absolute top-12 left-1/2 transform -translate-x-1/2 z-20">

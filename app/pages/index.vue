@@ -237,8 +237,10 @@ const footerNavigation = {
                 </span>
               </a>
             </div>
-            <h1 class="mt-10 text-5xl font-semibold tracking-tight text-pretty text-white sm:text-7xl">
-              Incident communication made simple
+            <h1 class="mt-10 text-5xl font-semibold tracking-tight text-pretty sm:text-7xl">
+              <span class="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+                Incident communication made simple
+              </span>
             </h1>
             <p class="mt-8 text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
               StatusZen streamlines incident reporting, enhances transparency, and maintains user trust with comprehensive status page management for modern businesses.
