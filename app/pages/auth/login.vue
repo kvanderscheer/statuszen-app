@@ -86,8 +86,8 @@ const displayError = (error: { message: string }) => {
 </script>
 
 <template>
-  <UContainer class="h-[calc(100vh-var(--ui-header-height))] flex items-center justify-center px-4">
-    <UPageCard class="max-w-sm w-full">
+  <div class="dark min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <UPageCard class="max-w-sm w-full bg-gray-800 border-gray-700">
       <UAuthForm
         :submit="{
           loadingAuto: true
@@ -96,6 +96,33 @@ const displayError = (error: { message: string }) => {
         icon="i-lucide-user"
         :fields="fields"
         :providers="providers"
+        :ui="{
+          base: 'space-y-4',
+          form: 'space-y-4',
+          title: 'text-white text-xl font-semibold',
+          description: 'text-gray-400 text-sm',
+          field: {
+            wrapper: 'space-y-2',
+            label: 'text-gray-300 text-sm font-medium',
+            input: {
+              base: 'w-full bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500',
+              rounded: 'rounded-md',
+              padding: 'px-3 py-2'
+            }
+          },
+          button: {
+            base: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors',
+            loading: 'opacity-75 cursor-not-allowed'
+          },
+          divider: {
+            base: 'flex items-center my-4',
+            line: 'flex-1 border-t border-gray-600',
+            label: 'px-3 text-gray-400 text-sm'
+          },
+          provider: {
+            base: 'w-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2'
+          }
+        }"
         @submit="onSubmit"
       >
         <template
@@ -105,7 +132,7 @@ const displayError = (error: { message: string }) => {
           <UButton
             v-if="sign === 'in'"
             variant="link"
-            class="p-0"
+            class="p-0 text-blue-400 hover:text-blue-300"
             to="/auth/signup"
           >
             Create a new account
@@ -113,7 +140,7 @@ const displayError = (error: { message: string }) => {
           <UButton
             v-else
             variant="link"
-            class="p-0"
+            class="p-0 text-blue-400 hover:text-blue-300"
             @click="sign = 'in'"
           >
             Sign in
@@ -121,5 +148,5 @@ const displayError = (error: { message: string }) => {
         </template>
       </UAuthForm>
     </UPageCard>
-  </UContainer>
+  </div>
 </template>

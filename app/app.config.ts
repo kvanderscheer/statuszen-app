@@ -13,6 +13,14 @@ export default defineAppConfig({
         ]
       }
     },
+    input: {
+      slots: {
+        base: [
+          'w-full rounded-full border-0 placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75',
+          'transition-colors'
+        ]
+      }
+    },
     selectMenu: {
       slots: {
         base: [

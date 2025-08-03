@@ -21,7 +21,7 @@ const { signUp, isLoading, getFieldError, clearErrors } = useSignup()
 const formData = reactive<SignupFormData>({
   email: '',
   password: '',
-  fullName: '',
+  fullName: ''
 })
 
 const showPassword = ref(false)
@@ -107,12 +107,15 @@ useHead({
 
 <template>
   <!-- Split Screen Layout -->
-  <div class="min-h-[calc(100vh-var(--ui-header-height))] flex flex-col md:flex-row">
+  <div class="dark min-h-[calc(100vh-var(--ui-header-height))] flex flex-col md:flex-row">
     <!-- Left Panel - Dark Form Area -->
-    <div class="w-full md:w-1/2 lg:w-2/5 bg-slate-900 flex flex-col min-h-screen md:min-h-[calc(100vh-var(--ui-header-height))]">
+    <div class="w-full md:w-1/2 lg:w-2/5 bg-gray-900 flex flex-col min-h-screen md:min-h-[calc(100vh-var(--ui-header-height))]">
       <!-- Logo Area -->
       <div class="p-6 lg:p-8">
-        <NuxtLink to="/" class="flex items-center space-x-2">
+        <NuxtLink
+          to="/"
+          class="flex items-center space-x-2"
+        >
           <UIcon
             name="i-heroicons-sparkles"
             class="w-6 h-6 lg:w-8 lg:h-8 text-primary-500"
@@ -142,7 +145,6 @@ useHead({
           >
             <!-- Personal Information Section -->
             <div class="space-y-4">
-
               <div
                 v-for="field in fields"
                 :key="field.name"
@@ -157,7 +159,7 @@ useHead({
                 >
                   <UInput
                     v-model="formData[field.name as keyof SignupFormData]"
-                    class="w-full [&_input]:bg-slate-800 [&_input]:border-slate-700 [&_input]:text-white [&_input]:placeholder-slate-400"
+                    class="w-full [&_input]:bg-gray-700 [&_input]:border-gray-600 [&_input]:text-white [&_input]:placeholder-gray-400"
                     :type="field.type"
                     :placeholder="field.placeholder"
                     :icon="field.icon"
@@ -171,7 +173,6 @@ useHead({
 
             <!-- Password Section -->
             <div class="space-y-4">
-
               <UFormField
                 name="password"
                 label="Password"
@@ -181,7 +182,7 @@ useHead({
               >
                 <UInput
                   v-model="formData.password"
-                  class="w-full [&_input]:bg-slate-800 [&_input]:border-slate-700 [&_input]:text-white [&_input]:placeholder-slate-400"
+                  class="w-full [&_input]:bg-gray-700 [&_input]:border-gray-600 [&_input]:text-white [&_input]:placeholder-gray-400"
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="Create a strong password"
                   icon="i-lucide-lock"
@@ -300,7 +301,7 @@ useHead({
       <ParticleSystem />
 
       <!-- Promotional Badge -->
-<!--       <div class="absolute top-12 left-1/2 transform -translate-x-1/2 z-20">
+      <!--       <div class="absolute top-12 left-1/2 transform -translate-x-1/2 z-20">
         <div class="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-full px-6 py-2">
           <span class="text-blue-300 text-sm font-medium">20% off our annual plan</span>
         </div>

@@ -35,7 +35,7 @@ const handleNavClick = (event: Event, targetId: string) => {
 <template>
   <div class="min-h-screen scroll-smooth relative">
     <!-- Main Content -->
-    <main class="relative z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+    <main class="relative z-10 bg-gray-900/80 backdrop-blur-sm">
       <slot />
     </main>
   </div>
