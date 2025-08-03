@@ -1,8 +1,16 @@
 @import "tailwindcss";
 @import "@nuxt/ui-pro";
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
 @theme static {
-  --font-sans: 'Public Sans', sans-serif;
+ /*  --font-sans: 'Public Sans', sans-serif; */
+  --font-sans: 'Geist', sans-serif;
+  --font-mono: 'Jetbrains Mono', monospace;
+  --font-serif: 'Newsreader', serif;
 
   --color-green-50: #EFFDF5;
   --color-green-100: #D9FBE8;
