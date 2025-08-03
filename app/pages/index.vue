@@ -1,19 +1,25 @@
+<script setup lang="ts">
+  definePageMeta({
+    layout: 'top-nav'
+  })
+</script>
+
 <template>
-  <div>
+  <div class="relative min-h-screen">
+    <ParticleSystem />
+    <div class="relative z-10">
     <UPageHero
-      title="Nuxt UI Pro - Starter"
-      description="Nuxt UI Pro is a collection of premium components built on top of Nuxt UI to create beautiful & responsive applications in minutes."
+      title="StatusZen"
+      description="Comprehensive incident communication and status page management platform designed to streamline incident reporting, enhance transparency, and maintain user trust for businesses."
       :links="[{
         label: 'Get started',
-        to: 'https://ui.nuxt.com/getting-started/installation/pro/nuxt',
-        target: '_blank',
+        to: '/auth/signup',
         trailingIcon: 'i-lucide-arrow-right',
         size: 'xl'
       }, {
-        label: 'Use this template',
-        to: 'https://github.com/nuxt-ui-pro/starter',
-        target: '_blank',
-        icon: 'i-simple-icons-github',
+        label: 'View demo',
+        to: '#features',
+        icon: 'i-lucide-play-circle',
         size: 'xl',
         color: 'neutral',
         variant: 'subtle'
@@ -22,43 +28,42 @@
 
     <UPageSection
       id="features"
-      title="The freedom to build anything"
-      description="Nuxt UI Pro ships with an extensive set of advanced components that cover a wide range of use-cases. Carefully crafted to reduce boilerplate code without sacrificing flexibility."
+      title="Everything you need for incident management"
+      description="StatusZen provides comprehensive incident communication and status page management tools to maintain transparency and user trust during critical moments."
       :features="[{
-        icon: 'i-lucide-wrench',
-        title: 'Fully customizable',
-        description: 'Customize any component through the App Config or fine-tune specific instances with the ui prop, just like Nuxt UI.'
+        icon: 'i-lucide-alert-triangle',
+        title: 'Real-time incident reporting',
+        description: 'Automated incident detection and manual reporting with multi-channel communication including email, SMS, and push notifications.'
       }, {
-        icon: 'i-lucide-square-stack',
-        title: 'Powerful slot system',
-        description: 'Take full control of component layouts and content with Vue\'s comprehensive slot system for maximum flexibility.'
+        icon: 'i-lucide-monitor',
+        title: 'Customizable status pages',
+        description: 'Create branded status pages with uptime graphs, performance metrics, and real-time incident updates for public or private use.'
       }, {
-        icon: 'i-lucide-smartphone',
-        title: 'Mobile-first & responsive',
-        description: 'Built with a mobile-first approach, all components automatically adapt to any screen size while maintaining a polished look.'
+        icon: 'i-lucide-bell',
+        title: 'Intelligent notifications',
+        description: 'Subscription-based alert system with customizable thresholds and multi-language support powered by AI translations.'
       }]"
     />
 
     <UPageSection>
       <UPageCTA
-        title="Start with Nuxt UI Pro today!"
-        description="Nuxt UI Pro is free in development, but you need a license to use it in production."
+        title="Ready to enhance your incident communication?"
+        description="Start with StatusZen today and build trust with transparent, real-time status updates. Free tier available."
         variant="subtle"
         :links="[{
-          label: 'Buy now',
-          to: 'https://ui.nuxt.com/pro/purchase',
-          target: '_blank',
-          icon: 'i-lucide-shopping-cart',
-          color: 'neutral'
+          label: 'Start free trial',
+          to: '/auth/signup',
+          icon: 'i-lucide-rocket',
+          color: 'primary'
         }, {
-          label: 'License',
-          to: 'https://ui.nuxt.com/getting-started/license',
-          target: '_blank',
-          trailingIcon: 'i-lucide-circle-help',
+          label: 'Learn more',
+          to: '#features',
+          trailingIcon: 'i-lucide-arrow-down',
           color: 'neutral',
           variant: 'subtle'
         }]"
       />
     </UPageSection>
+    </div>
   </div>
 </template>

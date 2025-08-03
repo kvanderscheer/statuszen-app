@@ -6,9 +6,13 @@ const toast = useToast()
 
 const sign = ref<'in' | 'up'>('in')
 
+definePageMeta({
+  layout: 'empty'
+})
+
 watchEffect(() => {
   if (user.value) {
-    return navigateTo('/')
+    return navigateTo('/dashboard')
   }
 })
 
