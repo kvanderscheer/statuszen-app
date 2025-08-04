@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 useSeoMeta({
   title: 'ClockTower - Professional Time Tracking',
   description: 'Track time like a pro with ClockTower. Professional time tracking, project management, and detailed reporting for teams and freelancers.',

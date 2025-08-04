@@ -96,7 +96,7 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <!-- <TeamsMenu :collapsed="collapsed" /> -->
+        <OrganizationSelector :collapsed="collapsed" />
       </template>
 
       <template #default="{ collapsed }">
@@ -130,7 +130,7 @@ onMounted(async () => {
     <UDashboardSearch :groups="groups" />
 
     <div class="flex-1 flex flex-col min-h-0">
-<!--       <AppHeader @search="handleGlobalSearch" /> -->
+      <!--       <AppHeader @search="handleGlobalSearch" /> -->
       <main class="flex-1 overflow-y-auto">
         <slot />
       </main>

@@ -4,7 +4,7 @@ import type { TimezoneOption } from '~/types/auth'
 export const timezoneOptions: TimezoneOption[] = [
   // UTC
   { value: 'UTC', label: 'UTC (Coordinated Universal Time)', group: 'UTC' },
-  
+
   // America
   { value: 'America/New_York', label: 'Eastern Time (New York)', group: 'America' },
   { value: 'America/Chicago', label: 'Central Time (Chicago)', group: 'America' },
@@ -17,7 +17,7 @@ export const timezoneOptions: TimezoneOption[] = [
   { value: 'America/Mexico_City', label: 'Central Time (Mexico City)', group: 'America' },
   { value: 'America/Sao_Paulo', label: 'Brasília Time (São Paulo)', group: 'America' },
   { value: 'America/Buenos_Aires', label: 'Argentina Time (Buenos Aires)', group: 'America' },
-  
+
   // Europe
   { value: 'Europe/London', label: 'Greenwich Mean Time (London)', group: 'Europe' },
   { value: 'Europe/Dublin', label: 'Greenwich Mean Time (Dublin)', group: 'Europe' },
@@ -32,7 +32,7 @@ export const timezoneOptions: TimezoneOption[] = [
   { value: 'Europe/Athens', label: 'Eastern European Time (Athens)', group: 'Europe' },
   { value: 'Europe/Helsinki', label: 'Eastern European Time (Helsinki)', group: 'Europe' },
   { value: 'Europe/Moscow', label: 'Moscow Standard Time', group: 'Europe' },
-  
+
   // Asia
   { value: 'Asia/Tokyo', label: 'Japan Standard Time (Tokyo)', group: 'Asia' },
   { value: 'Asia/Seoul', label: 'Korea Standard Time (Seoul)', group: 'Asia' },
@@ -48,7 +48,7 @@ export const timezoneOptions: TimezoneOption[] = [
   { value: 'Asia/Dubai', label: 'Gulf Standard Time (Dubai)', group: 'Asia' },
   { value: 'Asia/Riyadh', label: 'Arabia Standard Time (Riyadh)', group: 'Asia' },
   { value: 'Asia/Jerusalem', label: 'Israel Standard Time', group: 'Asia' },
-  
+
   // Australia & Pacific
   { value: 'Australia/Sydney', label: 'Australian Eastern Time (Sydney)', group: 'Australia' },
   { value: 'Australia/Melbourne', label: 'Australian Eastern Time (Melbourne)', group: 'Australia' },
@@ -57,7 +57,7 @@ export const timezoneOptions: TimezoneOption[] = [
   { value: 'Australia/Adelaide', label: 'Australian Central Time (Adelaide)', group: 'Australia' },
   { value: 'Pacific/Auckland', label: 'New Zealand Time (Auckland)', group: 'Pacific' },
   { value: 'Pacific/Fiji', label: 'Fiji Time', group: 'Pacific' },
-  
+
   // Africa
   { value: 'Africa/Cairo', label: 'Eastern European Time (Cairo)', group: 'Africa' },
   { value: 'Africa/Johannesburg', label: 'South Africa Standard Time', group: 'Africa' },
@@ -87,7 +87,7 @@ export const getUserTimezone = (): string => {
 export const formatTimezoneWithTime = (timezone: string): string => {
   try {
     const now = new Date()
-    const time = now.toLocaleTimeString('en-US', { 
+    const time = now.toLocaleTimeString('en-US', {
       timeZone: timezone,
       hour: '2-digit',
       minute: '2-digit',

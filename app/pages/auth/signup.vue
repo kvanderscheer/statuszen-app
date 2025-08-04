@@ -16,6 +16,8 @@ watchEffect(() => {
 
 // Setup composables
 const { signUp, isLoading, getFieldError, clearErrors } = useSignup()
+const supabase = useSupabaseClient()
+const toast = useToast()
 
 // Form state
 const formData = reactive<SignupFormData>({
@@ -26,6 +28,24 @@ const formData = reactive<SignupFormData>({
 
 const showPassword = ref(false)
 const acceptTerms = ref(false)
+
+// Google OAuth provider
+const signUpWithGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`
+    }
+  })
+  if (error) {
+    toast.add({
+      title: 'Error',
+      description: error.message,
+      icon: 'i-lucide-alert-circle',
+      color: 'error'
+    })
+  }
+}
 
 // Password strength computation
 const passwordStrength = computed(() => {
@@ -275,6 +295,30 @@ useHead({
                 <UIcon name="i-lucide-rocket" />
               </template>
               Create Account
+            </UButton>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-slate-700" />
+              </div>
+              <div class="relative flex justify-center text-sm">
+                <span class="bg-gray-900 px-3 text-slate-400">or continue with</span>
+              </div>
+            </div>
+
+            <!-- Google Sign Up Button -->
+            <UButton
+              variant="outline"
+              size="lg"
+              block
+              class="bg-gray-700 hover:bg-gray-600 border-gray-600 text-white"
+              @click="signUpWithGoogle"
+            >
+              <template #leading>
+                <UIcon name="i-simple-icons-google" />
+              </template>
+              Sign up with Google
             </UButton>
 
             <!-- Login Link -->

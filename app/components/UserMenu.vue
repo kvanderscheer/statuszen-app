@@ -20,10 +20,10 @@ const user = computed(() => {
     }
   }
 
-  const userName = supabaseUser.value.user_metadata?.full_name || 
-                   supabaseUser.value.user_metadata?.name || 
-                   supabaseUser.value.email || 
-                   'Guest User'
+  const userName = supabaseUser.value.user_metadata?.full_name
+    || supabaseUser.value.user_metadata?.name
+    || supabaseUser.value.email
+    || 'Guest User'
   return {
     name: userName,
     avatar: {

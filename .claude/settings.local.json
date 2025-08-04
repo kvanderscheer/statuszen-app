@@ -4,7 +4,15 @@
     "allow": [
       "mcp__supabase__list_projects",
       "Bash(npm run lint:*)",
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__apply_migration",
+      "Bash(npm run typecheck:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__supabase__list_tables",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ui.nuxt.com)",
+      "mcp__supabase__execute_sql"
     ],
     "deny": []
   },

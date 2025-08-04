@@ -4,7 +4,7 @@
     class="particle-canvas"
     @click="handleClick"
     @mousemove="handleMouseMove"
-  ></canvas>
+  />
 </template>
 
 <script setup lang="ts">
@@ -19,7 +19,7 @@ let ctx: CanvasRenderingContext2D | null = null
 let animationFrame: number | null = null
 let particles: Particle[] = []
 let signalManager: SignalManager | null = null
-let mouse = { x: null as number | null, y: null as number | null }
+const mouse = { x: null as number | null, y: null as number | null }
 
 const getParticleCount = () => window?.innerWidth < 768 ? PARTICLE_COUNT.MOBILE : PARTICLE_COUNT.DESKTOP
 
@@ -77,7 +77,7 @@ const handleClick = (event: MouseEvent) => {
   const rect = canvas.value.getBoundingClientRect()
   const clickX = event.clientX - rect.left
   const clickY = event.clientY - rect.top
-  
+
   let closestParticle: Particle | null = null
   let closestDistance = Infinity
 

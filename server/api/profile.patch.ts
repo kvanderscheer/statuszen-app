@@ -32,12 +32,12 @@ export default defineEventHandler(async (event) => {
     console.log('PATCH All cookies:', Object.keys(cookies))
     console.log('PATCH Supabase auth cookie:', cookies['sb-hxdwufyndudktvawiyks-auth-token'] ? 'Present' : 'Missing')
     console.log('PATCH Authorization header:', authHeader ? 'Present' : 'Missing')
-    
+
     // Get authenticated user
     const user = await serverSupabaseUser(event)
-    
+
     console.log('PATCH Authenticated user:', user ? { id: user.id, email: user.email } : 'No user')
-    
+
     if (!user) {
       throw createError({
         statusCode: 401,
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
 
     // Parse and validate request body
     const body = await readBody(event) as ProfileUpdateData
-    
+
     if (!body || typeof body !== 'object') {
       throw createError({
         statusCode: 400,
@@ -93,19 +93,19 @@ export default defineEventHandler(async (event) => {
 
     // Prepare update data for database
     const updateData: ProfileUpdateRecord = {}
-    
+
     if (body.fullName !== undefined) {
       updateData.full_name = body.fullName.trim()
     }
-    
+
     if (body.company !== undefined) {
       updateData.company = body.company.trim() || null
     }
-    
+
     if (body.phoneNumber !== undefined) {
       updateData.phone_number = body.phoneNumber || null
     }
-    
+
     if (body.timezone !== undefined) {
       updateData.timezone = body.timezone
     }
@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
 
     // Get Supabase client and update profile
     const supabase = await serverSupabaseClient(event)
-    
+
     const { data: updatedProfile, error } = await supabase
       .from('user_profiles')
       .update(updateData as any)
@@ -143,7 +143,7 @@ export default defineEventHandler(async (event) => {
           full_name: body.fullName.trim()
         }
       })
-      
+
       if (authError) {
         console.warn('Failed to update auth metadata:', authError)
         // Don't fail the request, just log the warning
@@ -164,12 +164,12 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error('Profile update error:', error)
-    
+
     // If it's already a structured error, re-throw it
     if (error.statusCode) {
       throw error
     }
-    
+
     // Otherwise, create a generic server error
     throw createError({
       statusCode: 500,

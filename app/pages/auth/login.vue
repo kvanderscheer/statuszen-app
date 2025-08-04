@@ -41,6 +41,18 @@ const providers = [{
     })
     if (error) displayError(error)
   }
+}, {
+  label: 'Google',
+  icon: 'i-simple-icons-google',
+  onClick: async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://localhost:3000/auth/callback'
+      }
+    })
+    if (error) displayError(error)
+  }
 }]
 
 const signIn = async (email: string, password: string) => {

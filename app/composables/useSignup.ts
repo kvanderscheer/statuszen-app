@@ -26,16 +26,12 @@ export const useSignup = () => {
       console.log('📋 User profile data:', {
         id: userId,
         full_name: data.fullName,
-        company: data.company || null,
-        plan: data.plan,
         email_verified: false
       })
 
       const profileData: UserProfileRecord = {
         id: userId,
         full_name: data.fullName,
-        company: data.company || null,
-        plan: data.plan,
         email_verified: false,
         timezone: 'UTC'
       }
@@ -52,6 +48,50 @@ export const useSignup = () => {
       console.log('✅ User profile created successfully')
     } catch (err) {
       console.error('❌ Unexpected error creating profile:', err)
+      throw err
+    }
+  }
+
+  const createPersonalOrganization = async (userId: string, fullName: string) => {
+    try {
+      console.log('✨ Creating personal organization for:', userId)
+
+      // Create personal organization using the Supabase function
+      const { data: orgData, error: orgError } = await supabase
+        .rpc('create_organization_with_owner', {
+          org_name: `${fullName}'s Organization`,
+          org_description: 'Personal organization',
+          owner_id: userId
+        })
+
+      if (orgError) {
+        console.error('❌ Organization creation error:', orgError)
+        throw orgError
+      }
+
+      if (orgData && orgData.length > 0) {
+        const organization = orgData[0]
+        console.log('✅ Personal organization created:', organization.id)
+
+        // Set this as the user's current organization
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({ current_organization_id: organization.id })
+          .eq('id', userId)
+
+        if (updateError) {
+          console.error('⚠️ Warning: Could not set current organization:', updateError)
+          // Don't throw error - organization was created successfully
+        } else {
+          console.log('✅ Set current organization for user')
+        }
+
+        return organization
+      } else {
+        throw new Error('Organization creation returned no data')
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error creating organization:', err)
       throw err
     }
   }
@@ -179,6 +219,16 @@ export const useSignup = () => {
 
         // Create user profile
         await createUserProfile(authData.user.id, data)
+
+        // Create personal organization
+        try {
+          await createPersonalOrganization(authData.user.id, data.fullName)
+          console.log('✅ Personal organization setup complete')
+        } catch (orgError) {
+          console.error('⚠️ Organization creation failed, but user was created:', orgError)
+          // Don't fail the entire signup if organization creation fails
+          // User can create organizations later through the UI
+        }
 
         toast.add({
           title: 'Account Created Successfully!',
