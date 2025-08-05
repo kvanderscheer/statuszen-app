@@ -44,11 +44,11 @@ const updateConfig = (key: string, value: any) => {
 // Get field value with proper type conversion
 const getFieldValue = (field: ConfigField) => {
   const value = config.value[field.key]
-  
+
   if (value === undefined || value === null) {
     return field.default
   }
-  
+
   // Type conversion
   switch (field.type) {
     case 'number':
@@ -75,11 +75,11 @@ const isValidNumber = (value: any, field: ConfigField): boolean => {
 // Get validation error for a field
 const getFieldError = (field: ConfigField): string | null => {
   const value = getFieldValue(field)
-  
+
   if (field.required && (value === undefined || value === null || value === '')) {
     return `${field.label} is required`
   }
-  
+
   if (field.type === 'number' && value !== undefined && !isValidNumber(value, field)) {
     if (field.min !== undefined && field.max !== undefined) {
       return `${field.label} must be between ${field.min} and ${field.max}`
@@ -90,14 +90,14 @@ const getFieldError = (field: ConfigField): string | null => {
     }
     return `${field.label} must be a valid number`
   }
-  
+
   return null
 }
 
 // Format help text with type-specific hints
 const getFieldHelp = (field: ConfigField): string => {
   let help = field.help || ''
-  
+
   if (field.type === 'number' && (field.min !== undefined || field.max !== undefined)) {
     const range = []
     if (field.min !== undefined) range.push(`min: ${field.min}`)
@@ -106,7 +106,7 @@ const getFieldHelp = (field: ConfigField): string => {
       help += help ? ` (${range.join(', ')})` : `Range: ${range.join(', ')}`
     }
   }
-  
+
   return help
 }
 </script>

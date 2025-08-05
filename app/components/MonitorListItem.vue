@@ -34,7 +34,7 @@ const statusDotColor = computed(() => {
 // Format interval for display
 const intervalText = computed(() => {
   const minutes = props.monitor.checkIntervalMinutes
-  
+
   if (minutes < 60) {
     return `${minutes}m`
   } else if (minutes < 1440) {
@@ -50,21 +50,21 @@ const intervalText = computed(() => {
 const statusTextWithTime = computed(() => {
   const status = props.monitor.statusText
   const lastCheck = props.monitor.lastScheduledAt
-  
+
   if (!lastCheck) return status
-  
+
   const date = new Date(lastCheck)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
-  
+
   let timeAgo = ''
   if (diffMins < 1) timeAgo = 'less than a minute'
   else if (diffMins < 60) timeAgo = `${diffMins}m`
   else if (diffHours < 24) timeAgo = `${diffHours}h ${diffMins % 60}m`
   else timeAgo = `${Math.floor(diffHours / 24)}d`
-  
+
   return `${status} · ${timeAgo}`
 })
 
@@ -99,7 +99,7 @@ const actions = computed(() => [
     <div class="flex items-center gap-3 flex-1 min-w-0">
       <!-- Status dot -->
       <div :class="['w-2 h-2 rounded-full flex-shrink-0', statusDotColor]" />
-      
+
       <!-- Monitor info -->
       <div class="flex-1 min-w-0">
         <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -115,10 +115,13 @@ const actions = computed(() => [
     <div class="flex items-center gap-3 flex-shrink-0">
       <!-- Check interval -->
       <div class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-        <UIcon name="i-lucide-clock" class="w-4 h-4" />
+        <UIcon
+          name="i-lucide-clock"
+          class="w-4 h-4"
+        />
         <span>{{ intervalText }}</span>
       </div>
-      
+
       <!-- Actions menu -->
       <UDropdown
         :items="[actions]"

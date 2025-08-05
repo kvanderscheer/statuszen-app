@@ -118,7 +118,7 @@ const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
   if (isEditMode.value) {
     // For updates, only include changed fields
     const updateData: UpdateMonitorData = {}
-    
+
     if (formData.name !== props.monitor?.name) updateData.name = formData.name
     if (formData.url !== props.monitor?.url) updateData.url = formData.url
     if (formData.type !== props.monitor?.type) updateData.type = formData.type
@@ -157,17 +157,17 @@ const handleCancel = () => {
 // Validate URL based on monitor type
 const validateUrl = (url: string, type: MonitorType): boolean => {
   if (!url) return false
-  
+
   try {
     if (type === 'ping') {
       // For ping, allow hostname/IP without protocol
       return /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$|^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(url)
     } else {
       const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-      
+
       if (type === 'http' && urlObj.protocol !== 'http:') return false
       if ((type === 'https' || type === 'ssl') && urlObj.protocol !== 'https:') return false
-      
+
       return true
     }
   } catch {
@@ -191,25 +191,25 @@ const urlError = computed(() => {
 // Check if form has changes (for edit mode)
 const hasChanges = computed(() => {
   if (!isEditMode.value || !props.monitor) return true
-  
+
   return (
-    state.name !== props.monitor.name ||
-    state.url !== props.monitor.url ||
-    state.type !== props.monitor.type ||
-    state.checkIntervalMinutes !== props.monitor.checkIntervalMinutes ||
-    state.preferredRegion !== props.monitor.preferredRegion ||
-    JSON.stringify(state.config) !== JSON.stringify(props.monitor.config)
+    state.name !== props.monitor.name
+    || state.url !== props.monitor.url
+    || state.type !== props.monitor.type
+    || state.checkIntervalMinutes !== props.monitor.checkIntervalMinutes
+    || state.preferredRegion !== props.monitor.preferredRegion
+    || JSON.stringify(state.config) !== JSON.stringify(props.monitor.config)
   )
 })
 
 // Check if form is valid
 const isFormValid = computed(() => {
   return (
-    state.name.trim().length >= 2 &&
-    state.url.trim().length >= 8 &&
-    !urlError.value &&
-    state.checkIntervalMinutes >= 1 &&
-    state.checkIntervalMinutes <= 1440
+    state.name.trim().length >= 2
+    && state.url.trim().length >= 8
+    && !urlError.value
+    && state.checkIntervalMinutes >= 1
+    && state.checkIntervalMinutes <= 1440
   )
 })
 </script>
@@ -319,7 +319,10 @@ const isFormValid = computed(() => {
       </div>
 
       <!-- Advanced Configuration -->
-      <div v-if="selectedMonitorType" class="space-y-4">
+      <div
+        v-if="selectedMonitorType"
+        class="space-y-4"
+      >
         <h4 class="font-medium text-sm text-gray-900 dark:text-gray-100">
           Advanced Configuration
         </h4>
@@ -340,7 +343,7 @@ const isFormValid = computed(() => {
         >
           Cancel
         </UButton>
-        
+
         <UButton
           type="submit"
           :loading="loading"

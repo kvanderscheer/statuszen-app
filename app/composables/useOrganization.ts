@@ -61,7 +61,7 @@ export const useOrganization = () => {
 
   // Get the shared state
   const { currentOrganization, organizations, members, invitations, isUpdating, error } = useOrganizationStore()
-  
+
   // Local loading states (not shared to avoid component re-mounting)
   const isLoading = ref(false)
   const isMembersLoading = ref(false)

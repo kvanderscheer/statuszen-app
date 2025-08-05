@@ -74,8 +74,6 @@ const refreshMembers = async () => {
     await memberListRef.value.refreshMembers()
   }
 }
-
-
 </script>
 
 <template>
@@ -158,7 +156,10 @@ const refreshMembers = async () => {
       </UCard>
 
       <!-- Members Section Skeleton -->
-      <UCard variant="subtle" class="shadow-sm">
+      <UCard
+        variant="subtle"
+        class="shadow-sm"
+      >
         <template #header>
           <div class="flex items-center justify-between">
             <div>
@@ -169,7 +170,11 @@ const refreshMembers = async () => {
           </div>
         </template>
         <div class="space-y-3">
-          <div v-for="i in 3" :key="i" class="flex items-center gap-3">
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="flex items-center gap-3"
+          >
             <USkeleton class="h-10 w-10 rounded-full" />
             <div class="flex-1">
               <USkeleton class="h-4 w-32 mb-1" />
@@ -181,7 +186,11 @@ const refreshMembers = async () => {
       </UCard>
 
       <!-- Settings Section Skeleton -->
-      <UCard title="Organization Settings" variant="subtle" class="shadow-sm">
+      <UCard
+        title="Organization Settings"
+        variant="subtle"
+        class="shadow-sm"
+      >
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <USkeleton class="h-4 w-32" />
@@ -270,8 +279,8 @@ const refreshMembers = async () => {
         <OrganizationMemberList
           v-if="organizationId"
           ref="memberListRef"
-          :organization-id="organizationId"
           :key="organizationId"
+          :organization-id="organizationId"
         />
       </UCard>
 

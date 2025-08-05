@@ -20,6 +20,13 @@ const links = [[{
   onSelect: () => {
     open.value = false
   }
+}, {
+  label: 'Monitors',
+  icon: 'i-lucide-monitor',
+  to: '/monitors',
+  onSelect: () => {
+    open.value = false
+  }
 }], [{
   label: 'Feedback',
   icon: 'i-lucide-message-circle',

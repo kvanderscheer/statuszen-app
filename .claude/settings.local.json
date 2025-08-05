@@ -12,7 +12,10 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:ui.nuxt.com)",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Bash(npx eslint:*)",
+      "Bash(npm install:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   },

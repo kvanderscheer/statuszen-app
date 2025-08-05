@@ -20,13 +20,13 @@ const handleSubmit = async (data: CreateMonitorData | UpdateMonitorData) => {
     console.error('Invalid data for monitor creation')
     return
   }
-  
+
   const monitor = await createMonitor(data as CreateMonitorData)
-  
+
   if (monitor) {
     // Success - navigate to monitors list
     await router.push('/monitors')
-    
+
     toast.add({
       title: 'Monitor Created',
       description: `"${monitor.name}" has been created successfully`,
@@ -59,7 +59,10 @@ watchEffect(() => {
       >
         Monitors
       </NuxtLink>
-      <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
+      <UIcon
+        name="i-lucide-chevron-right"
+        class="w-4 h-4"
+      />
       <span class="text-gray-900 dark:text-gray-100">Create Monitor</span>
     </nav>
 

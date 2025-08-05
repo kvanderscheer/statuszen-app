@@ -267,15 +267,17 @@ const columns: TableColumn<TableRow>[] = [
         </p>
       </div>
 
-      <div v-else class="w-full">
+      <div
+        v-else
+        class="w-full"
+      >
         <div class="w-full overflow-x-auto">
           <UTable
             :columns="columns"
             :data="tableRows"
             :loading="isMembersLoading"
             class="w-full min-w-0"
-          >
-          </UTable>
+          />
         </div>
       </div>
     </UCard>

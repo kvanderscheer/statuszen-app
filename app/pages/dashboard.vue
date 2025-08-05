@@ -3,7 +3,17 @@
 </script>
 
 <template>
-  <div>
-    <h1>Dashboard</h1>
-  </div>
+  <UDashboardPanel id="dashboard">
+    <template #header>
+      <UDashboardNavbar title="Dashboard">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+
+        <template #right>
+          Hi.
+        </template>
+      </UDashboardNavbar>
+    </template>
+  </UDashboardPanel>
 </template>
