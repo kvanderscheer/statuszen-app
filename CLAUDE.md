@@ -65,6 +65,22 @@ The app uses Supabase for authentication with the following flow:
 - Custom styling via `app.config.ts` slots system
 - Icon system using Iconify with Lucide and Simple Icons
 
+## Database & Tools
+
+### Supabase Integration
+This project has a **Supabase MCP (Model Context Protocol) server** available. When working with database operations:
+- **ALWAYS prefer the Supabase MCP** for database queries, table management, and data operations
+- Use MCP functions like `mcp__supabase__execute_sql`, `mcp__supabase__list_tables`, etc.
+- The database includes tables: `monitors`, `organizations`, `user_profiles`, `organization_members`, `organization_invitations`
+- Job scheduler system uses the `monitors` table for scheduling and tracking
+
+### Database Schema
+The `monitors` table includes all necessary fields for the job scheduler:
+- `id`, `organization_id`, `name`, `url`, `type`, `config`
+- `check_interval_minutes`, `preferred_region`, `is_active`
+- `last_scheduled_at`, `next_check_at` (scheduler timestamps)
+- `created_at`, `updated_at`
+
 ## Development Notes
 
 ### Module Configuration

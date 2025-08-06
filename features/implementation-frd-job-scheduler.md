@@ -22,52 +22,55 @@
 
 ## Phases
 
-- [ ] Phase 1: Core Infrastructure Setup
-  - [ ] 1.1 Create TypeScript type definitions for scheduler system
+- [x] Phase 1: Core Infrastructure Setup
+  - [x] 1.1 Create TypeScript type definitions for scheduler system
     - Define job data structures, queue configurations, and scheduling interfaces
-  - [ ] 1.2 Install and configure BullMQ dependencies  
+  - [x] 1.2 Install and configure BullMQ dependencies  
     - Add `bullmq` and `ioredis` packages to package.json
     - Configure TypeScript types for BullMQ integration
-  - [ ] 1.3 Set up environment variable configuration
+  - [x] 1.3 Set up environment variable configuration
     - Add Redis connection URL and queue configuration variables
     - Configure regional queue names and connection settings
-  - [ ] 1.4 Create directory structure for scheduler utilities
+  - [x] 1.4 Create directory structure for scheduler utilities
     - Set up organized folder structure following Nuxt 4 server conventions
 
-- [ ] Phase 2: Database Integration & Monitor Query Logic
-  - [ ] 2.1 Create monitor query utility functions
+- [x] Phase 2: Database Integration & Monitor Query Logic
+  - [x] 2.1 Create monitor query utility functions
     - Implement function to fetch monitors where `next_check_at <= NOW()` and `is_active = true`
     - Add database connection pooling optimization
-  - [ ] 2.2 Implement scheduling timestamp update logic
+  - [x] 2.2 Implement scheduling timestamp update logic
     - Create function to calculate next check time based on `check_interval_minutes`
     - Implement batch update functionality for `last_scheduled_at` and `next_check_at`
-  - [ ] 2.3 Add database query optimization
+  - [x] 2.3 Add database query optimization
     - Ensure proper indexing on `next_check_at` and `is_active` fields
     - Implement query batching for performance with up to 1000 monitors
 
-- [ ] Phase 3: BullMQ Queue Management & Job Creation
-  - [ ] 3.1 Configure Redis connection and BullMQ setup
-    - Set up Upstash Redis connection with proper error handling
-    - Configure BullMQ queues for different regions
-  - [ ] 3.2 Implement job creation logic
+- [x] Phase 3: Queue Management & Job Creation (REST-based)
+  - [x] 3.1 Configure Upstash REST API connection
+    - Set up REST-based queue system replacing BullMQ due to Upstash protocol limitations
+    - Built custom REST-based queue implementation
+  - [x] 3.2 Implement job creation logic
     - Create function to generate monitoring jobs with unique IDs
     - Implement job data structure matching FRD specifications
-  - [ ] 3.3 Add job configuration and retry policies
+  - [x] 3.3 Add job configuration and retry policies
     - Configure job options with retry policies and cleanup settings
     - Set job priorities based on monitor criticality
-  - [ ] 3.4 Implement job deduplication
+  - [x] 3.4 Implement job deduplication
     - Add logic to prevent duplicate jobs for same monitor within time window
 
-- [ ] Phase 4: Regional Routing & Load Distribution
-  - [ ] 4.1 Create regional queue routing logic
+- [x] Phase 4: Regional Routing & Load Distribution
+  - [x] 4.1 Create regional queue routing logic (updated for REST)
     - Implement queue selection based on monitor's `preferred_region`
-    - Create mapping from region codes to queue names
-  - [ ] 4.2 Add fallback region handling
+    - Updated mapping from region codes to REST queue names
+  - [x] 4.2 Add fallback region handling (updated for REST)
     - Implement fallback to default region when preferred region unavailable
-    - Add region availability validation before job creation
-  - [ ] 4.3 Implement load balancing for unspecified regions
-    - Create round-robin or weighted distribution for monitors without region preference
-    - Add queue health checking for optimal distribution
+    - Updated region availability validation for REST API
+  - [x] 4.3 Implement load balancing for unspecified regions (updated for REST)
+    - Updated round-robin distribution for REST-based queues
+    - Added REST queue health checking for optimal distribution
+  - [x] 4.4 Convert from BullMQ to REST-based system
+    - Successfully migrated from Redis protocol to Upstash REST API
+    - Updated all queue operations for REST compatibility
 
 - [ ] Phase 5: Error Handling, Retry Logic & Monitoring
   - [ ] 5.1 Implement comprehensive error handling
@@ -83,13 +86,13 @@
     - Add logic to detect and alert on recurring scheduling failures
     - Implement threshold-based alerting for cycle duration approaching limits
 
-- [ ] Phase 6: Vercel Cron Integration & Deployment
-  - [ ] 6.1 Create the main cron API endpoint
-    - Implement `/api/cron/scheduler` endpoint following Nuxt server API patterns
-    - Add proper HTTP method handling and response formatting
-  - [ ] 6.2 Add cron authentication and security
-    - Implement Vercel cron secret validation middleware
-    - Add request validation and rate limiting protection
+- [x] Phase 6: Main Scheduler Endpoint Implementation
+  - [x] 6.1 Create the main cron API endpoint
+    - Implemented `/api/cron/scheduler` endpoint with complete workflow orchestration
+    - Added proper HTTP method handling and comprehensive response formatting
+  - [x] 6.2 Add cron authentication and security
+    - Implemented CRON_SECRET validation for unauthorized access protection
+    - Added request validation and security headers
   - [ ] 6.3 Configure Vercel cron job
     - Create `vercel.json` configuration with `*/1 * * * *` schedule
     - Set up proper environment variables and secrets management
