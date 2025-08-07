@@ -1,5 +1,6 @@
-import type { LoadBalancingConfig, JobRetryConfig, DeduplicationConfig } from '~/types/job-queue'
+import type { LoadBalancingConfig, JobRetryConfig, DeduplicationConfig, WorkerQueue } from '~/types/job-queue'
 import type { SchedulingConfig } from '~/types/scheduler'
+import { getAllQueueNames } from '../queue/queue-service'
 
 /**
  * Environment configuration for job scheduler
@@ -12,9 +13,9 @@ export interface SchedulerEnvConfig {
   }
   scheduler: SchedulingConfig
   queues: {
-    usEastName: string
-    euWestName: string
     defaultRegion: string
+    // Queue names are now loaded dynamically from database
+    availableQueues?: string[] // Populated at runtime
   }
   jobs: {
     defaultAttempts: number
@@ -30,6 +31,38 @@ export interface SchedulerEnvConfig {
     logLevel: string
     enableMetrics: boolean
     metricsInterval: number
+  }
+}
+
+/**
+ * Load queue configuration from database and populate config
+ */
+export async function loadQueueConfiguration(config: SchedulerEnvConfig): Promise<SchedulerEnvConfig> {
+  try {
+    const queueNames = await getAllQueueNames()
+    config.queues.availableQueues = queueNames
+    
+    // Validate that we have at least one queue available
+    if (queueNames.length === 0) {
+      console.warn('No active queues found in database. Using fallback configuration.')
+      // Fallback to environment variables if no queues in database
+      const fallbackQueues = []
+      if (process.env.QUEUE_US_EAST_NAME) fallbackQueues.push(process.env.QUEUE_US_EAST_NAME)
+      if (process.env.QUEUE_EU_WEST_NAME) fallbackQueues.push(process.env.QUEUE_EU_WEST_NAME)
+      config.queues.availableQueues = fallbackQueues.length > 0 ? fallbackQueues : ['monitoring-us-east']
+    }
+    
+    return config
+  } catch (error) {
+    console.error('Failed to load queue configuration from database:', error)
+    
+    // Emergency fallback to environment variables
+    const fallbackQueues = []
+    if (process.env.QUEUE_US_EAST_NAME) fallbackQueues.push(process.env.QUEUE_US_EAST_NAME)
+    if (process.env.QUEUE_EU_WEST_NAME) fallbackQueues.push(process.env.QUEUE_EU_WEST_NAME)
+    config.queues.availableQueues = fallbackQueues.length > 0 ? fallbackQueues : ['monitoring-us-east']
+    
+    return config
   }
 }
 
@@ -54,9 +87,8 @@ export function getSchedulerConfig(): SchedulerEnvConfig {
       circuitBreakerTimeoutMs: parseInt(process.env.SCHEDULER_CIRCUIT_BREAKER_TIMEOUT_MS || '60000', 10)
     },
     queues: {
-      usEastName: process.env.QUEUE_US_EAST_NAME || 'monitoring-us-east',
-      euWestName: process.env.QUEUE_EU_WEST_NAME || 'monitoring-eu-west',
-      defaultRegion: process.env.QUEUE_DEFAULT_REGION || 'us-east'
+      defaultRegion: process.env.QUEUE_DEFAULT_REGION || 'us-east',
+      // availableQueues will be populated by loadQueueConfiguration()
     },
     jobs: {
       defaultAttempts: parseInt(process.env.JOB_DEFAULT_ATTEMPTS || '3', 10),
@@ -79,6 +111,14 @@ export function getSchedulerConfig(): SchedulerEnvConfig {
   validateSchedulerConfig(config)
 
   return config
+}
+
+/**
+ * Get scheduler configuration with queue configuration loaded from database
+ */
+export async function getSchedulerConfigWithQueues(): Promise<SchedulerEnvConfig> {
+  const config = getSchedulerConfig()
+  return await loadQueueConfiguration(config)
 }
 
 /**
@@ -105,13 +145,10 @@ function validateSchedulerConfig(config: SchedulerEnvConfig): void {
     errors.push('SCHEDULER_BATCH_SIZE must be greater than 0')
   }
 
-  // Queue validation
-  if (!config.queues.usEastName) {
-    errors.push('QUEUE_US_EAST_NAME is required')
-  }
-
-  if (!config.queues.euWestName) {
-    errors.push('QUEUE_EU_WEST_NAME is required')
+  // Queue validation - now handled by database service
+  // Queue names are loaded dynamically from database
+  if (!config.queues.defaultRegion) {
+    errors.push('QUEUE_DEFAULT_REGION is required')
   }
 
   // Job validation

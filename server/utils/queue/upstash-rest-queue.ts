@@ -285,14 +285,16 @@ export function getUpstashQueue(queueName: string): UpstashRestQueue {
 
 /**
  * Create monitoring job using REST queue
+ * @deprecated Use createMonitoringJob from job-creator.ts instead for dynamic queue selection
  */
 export async function createMonitoringJobRest(monitor: any): Promise<JobCreationResult> {
   try {
-    const queueName = monitor.preferred_region === 'eu-west' 
-      ? 'monitoring-eu-west' 
-      : 'monitoring-us-east'
+    // Import dynamic queue selection
+    const { selectQueue, getRecommendedQueue } = await import('../scheduler/regional-router')
     
-    const queue = getUpstashQueue(queueName)
+    // Use dynamic queue selection
+    const queueResult = await selectQueue(monitor.preferred_region || 'us-east')
+    const queue = getUpstashQueue(queueResult.selectedQueue)
     const jobId = `${monitor.id}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
     
     const jobData: MonitoringJobData = {
@@ -307,10 +309,14 @@ export async function createMonitoringJobRest(monitor: any): Promise<JobCreation
 
     return await queue.addJob(jobId, jobData)
   } catch (error) {
+    // Use dynamic fallback queue
+    const { getRecommendedQueue } = await import('../scheduler/regional-router')
+    const fallbackQueue = await getRecommendedQueue()
+    
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      queueName: 'monitoring-us-east' as any,
+      queueName: fallbackQueue,
       retryable: true
     }
   }

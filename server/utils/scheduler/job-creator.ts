@@ -7,8 +7,8 @@
  * - Deduplication logic
  */
 
-import type { JobCreationResult, BatchJobCreationResult, QueueName } from '../../types/job-queue'
-import type { SchedulableMonitor } from '../../types/scheduler'
+import type { JobCreationResult, BatchJobCreationResult, QueueName } from '~/types/job-queue'
+import type { SchedulableMonitor } from '~/types/scheduler'
 import { getUpstashQueue } from '../queue/upstash-rest-queue'
 import { 
   createJobDataFromMonitor, 
@@ -19,7 +19,8 @@ import {
   needsDeduplication,
   sanitizeJobDataForLogging
 } from '../queue/job-types'
-import { selectQueue } from './regional-router'
+import { selectQueue, getRecommendedQueue } from './regional-router'
+import { getActiveQueues } from '../queue/queue-service'
 
 // Deduplication cache (in production, this should be Redis-based)
 const deduplicationCache = new Map<string, number>()
@@ -34,10 +35,11 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
 
     // Validate job data
     if (!validateJobData(jobData)) {
+      const fallbackQueue = await getRecommendedQueue()
       return {
         success: false,
         error: 'Invalid job data',
-        queueName: 'monitoring-us-east', // Default fallback
+        queueName: fallbackQueue,
         retryable: false
       }
     }
@@ -49,10 +51,11 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
     
     if (existingTime && (now - existingTime) < 60000) { // 1 minute window
       console.log(`Skipping duplicate job for monitor ${monitor.id}`)
+      const fallbackQueue = await getRecommendedQueue()
       return {
         success: false,
         error: 'Duplicate job within deduplication window',
-        queueName: 'monitoring-us-east',
+        queueName: fallbackQueue,
         retryable: false
       }
     }
@@ -89,11 +92,12 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
 
   } catch (error) {
     console.error(`Failed to create job for monitor ${monitor.id}:`, error)
+    const fallbackQueue = await getRecommendedQueue()
     
     return {
       success: false,
       error: `Job creation failed: ${error}`,
-      queueName: 'monitoring-us-east', // Default fallback
+      queueName: fallbackQueue,
       retryable: true
     }
   }
@@ -105,10 +109,13 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
 export async function createMonitoringJobsBatch(monitors: SchedulableMonitor[]): Promise<BatchJobCreationResult> {
   const startTime = Date.now()
   const results: JobCreationResult[] = []
-  const queueDistribution: Record<QueueName, number> = {
-    'monitoring-us-east': 0,
-    'monitoring-eu-west': 0
-  }
+  
+  // Initialize queue distribution dynamically
+  const activeQueues = await getActiveQueues()
+  const queueDistribution: Record<QueueName, number> = {}
+  activeQueues.forEach(queue => {
+    queueDistribution[queue.name] = 0
+  })
 
   // Process monitors in parallel with limited concurrency
   const concurrency = 10
@@ -131,10 +138,11 @@ export async function createMonitoringJobsBatch(monitors: SchedulableMonitor[]):
         return result
       } catch (error) {
         console.error(`Batch job creation failed for monitor ${monitor.id}:`, error)
+        const fallbackQueue = await getRecommendedQueue()
         const failedResult: JobCreationResult = {
           success: false,
           error: `Batch creation failed: ${error}`,
-          queueName: 'monitoring-us-east',
+          queueName: fallbackQueue,
           retryable: true
         }
         results.push(failedResult)
@@ -208,10 +216,11 @@ export async function retryJobCreation(
   maxAttempts: number = 3
 ): Promise<JobCreationResult> {
   if (attempt >= maxAttempts) {
+    const fallbackQueue = await getRecommendedQueue()
     return {
       success: false,
       error: `Max retry attempts (${maxAttempts}) exceeded`,
-      queueName: 'monitoring-us-east',
+      queueName: fallbackQueue,
       retryable: false
     }
   }

@@ -11,9 +11,9 @@ export type JobType = 'HTTP_CHECK' | 'HTTPS_CHECK' | 'PING_CHECK' | 'SSL_CHECK'
 export type JobPriority = 1 | 2 | 3 | 4 | 5 // 1 = highest, 5 = lowest
 
 /**
- * Regional queue names mapping
+ * Queue name - now dynamic, loaded from database
  */
-export type QueueName = 'monitoring-us-east' | 'monitoring-eu-west'
+export type QueueName = string
 
 /**
  * Job data structure for BullMQ
@@ -198,6 +198,36 @@ export interface QueueRoutingResult {
 }
 
 /**
+ * Worker queue configuration from database
+ */
+export interface WorkerQueue {
+  id: string
+  name: string
+  region: MonitorRegion
+  endpoint?: string
+  isActive: boolean
+  healthStatus: 'healthy' | 'unhealthy' | 'unknown'
+  priority: number
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * Database record structure for worker_queues table
+ */
+export interface WorkerQueueRecord {
+  id: string
+  name: string
+  region: MonitorRegion
+  endpoint?: string
+  is_active: boolean
+  health_status: string
+  priority: number
+  created_at: string
+  updated_at: string
+}
+
+/**
  * Queue operation context
  */
 export interface QueueOperationContext {
@@ -238,16 +268,10 @@ export const DEFAULT_LOAD_BALANCING_CONFIG: LoadBalancingConfig = {
 }
 
 /**
- * Queue name mapping utility
+ * Queue name mapping utility - now loaded dynamically from database
+ * This constant is deprecated and will be removed in favor of database-driven mapping
+ * @deprecated Use QueueService.getQueueByRegion() instead
  */
-export const QUEUE_REGION_MAP: Record<MonitorRegion, QueueName> = {
-  'us-east': 'monitoring-us-east',
-  'us-west': 'monitoring-us-east', // Fallback to us-east for now
-  'eu-west': 'monitoring-eu-west',
-  'eu-central': 'monitoring-eu-west', // Fallback to eu-west
-  'ap-south': 'monitoring-us-east', // Fallback to us-east
-  'ap-southeast': 'monitoring-us-east' // Fallback to us-east
-}
 
 /**
  * Job type mapping from monitor type

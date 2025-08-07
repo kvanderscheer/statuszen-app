@@ -15,7 +15,9 @@
       "mcp__supabase__execute_sql",
       "Bash(npx eslint:*)",
       "Bash(npm install:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(echo $'Available MCP tools:')",
+      "Bash(env)"
     ],
     "deny": []
   },

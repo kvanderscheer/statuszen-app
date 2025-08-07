@@ -7,36 +7,29 @@
  * - Load balancing for unspecified regions
  */
 
-import type { QueueName, QueueRoutingResult } from '../../types/job-queue'
-import type { MonitorRegion } from '../../types/monitor'
+import type { QueueName, QueueRoutingResult } from '~/types/job-queue'
+import type { MonitorRegion } from '~/types/monitor'
 import { getUpstashQueue } from '../queue/upstash-rest-queue'
+import { getQueuesByRegion, getPreferredQueueForRegion, getActiveQueues, updateQueueHealth } from '../queue/queue-service'
 
-// Queue region mapping
-const QUEUE_REGION_MAP: Record<MonitorRegion, QueueName> = {
-  'us-east': 'monitoring-us-east',
-  'us-west': 'monitoring-us-east', // Fallback to us-east for now
-  'eu-west': 'monitoring-eu-west',
-  'eu-central': 'monitoring-eu-west', // Fallback to eu-west
-  'ap-south': 'monitoring-us-east', // Fallback to us-east for now
-  'ap-southeast': 'monitoring-us-east' // Fallback to us-east for now
-}
+// Queue region mapping is now handled dynamically by queue-service
 
 // Load balancing state
 let currentQueueIndex = 0
-const queueHealthStatus = new Map<QueueName, { healthy: boolean; lastCheck: number; consecutiveFailures: number }>()
+const queueHealthStatus = new Map<QueueName, { healthy: boolean, lastCheck: number, consecutiveFailures: number }>()
 
 /**
  * Select appropriate queue for monitor based on region
  */
 export async function selectQueue(preferredRegion: MonitorRegion): Promise<QueueRoutingResult> {
   try {
-    // First, try the preferred region
-    const preferredQueue = QUEUE_REGION_MAP[preferredRegion]
-    
-    if (preferredQueue && await checkQueueHealth(preferredQueue)) {
+    // First, try to get preferred queue for the region
+    const preferredQueue = await getPreferredQueueForRegion(preferredRegion)
+
+    if (preferredQueue && await checkQueueHealth(preferredQueue.name)) {
       return {
-        selectedQueue: preferredQueue,
-        region: preferredRegion,
+        selectedQueue: preferredQueue.name,
+        region: preferredQueue.region,
         isPreferred: true,
         isFallback: false,
         loadFactor: 0.5, // Default load factor
@@ -44,36 +37,57 @@ export async function selectQueue(preferredRegion: MonitorRegion): Promise<Queue
       }
     }
 
-    console.warn(`Preferred queue ${preferredQueue} for region ${preferredRegion} is unhealthy, selecting fallback`)
+    if (preferredQueue) {
+      console.warn(`Preferred queue ${preferredQueue.name} for region ${preferredRegion} is unhealthy, selecting fallback`)
+    }
 
-    // If preferred queue is unhealthy, try fallback
-    const fallbackQueue = await selectFallbackQueue(preferredQueue)
-    if (fallbackQueue) {
-      return {
-        selectedQueue: fallbackQueue.queueName,
-        region: fallbackQueue.region,
-        isPreferred: false,
-        isFallback: true,
-        loadFactor: 0.7, // Higher load factor for fallback
-        healthScore: fallbackQueue.healthScore
+    // Try fallback queues for the region
+    const fallbackQueues = await getQueuesByRegion(preferredRegion)
+    for (const queue of fallbackQueues) {
+      if (queue.name !== preferredQueue?.name && await checkQueueHealth(queue.name)) {
+        return {
+          selectedQueue: queue.name,
+          region: queue.region,
+          isPreferred: queue.region === preferredRegion,
+          isFallback: queue.region !== preferredRegion,
+          loadFactor: queue.region === preferredRegion ? 0.6 : 0.8,
+          healthScore: 0.8
+        }
       }
     }
 
-    // Last resort: use load balancing
-    const balancedQueue = getNextQueueByLoadBalancing()
-    return {
-      selectedQueue: balancedQueue,
-      region: getRegionForQueue(balancedQueue),
-      isPreferred: false,
-      isFallback: true,
-      loadFactor: 1.0, // Maximum load factor
-      healthScore: 0.5 // Unknown health
+    // Last resort: use any healthy queue from load balancing
+    const balancedQueue = await getNextHealthyQueueByLoadBalancing()
+    if (balancedQueue) {
+      return {
+        selectedQueue: balancedQueue.name,
+        region: balancedQueue.region,
+        isPreferred: false,
+        isFallback: true,
+        loadFactor: 1.0, // Maximum load factor
+        healthScore: 0.5 // Unknown health
+      }
     }
 
+    // Emergency fallback - get any available queue
+    const activeQueues = await getActiveQueues()
+    if (activeQueues.length > 0) {
+      const emergencyQueue = activeQueues[0]
+      return {
+        selectedQueue: emergencyQueue.name,
+        region: emergencyQueue.region,
+        isPreferred: false,
+        isFallback: true,
+        loadFactor: 1.0,
+        healthScore: 0.0 // Unknown health due to emergency
+      }
+    }
+
+    throw new Error('No active queues available')
   } catch (error) {
     console.error('Queue selection error:', error)
-    
-    // Emergency fallback to us-east
+
+    // Final emergency fallback to hard-coded queue
     return {
       selectedQueue: 'monitoring-us-east',
       region: 'us-east',
@@ -101,86 +115,85 @@ export async function checkQueueHealth(queueName: QueueName): Promise<boolean> {
     // Perform actual health check using REST queue
     const queue = getUpstashQueue(queueName)
     const isHealthy = await queue.isHealthy()
-    
+
     // Update health status
     const currentStatus = queueHealthStatus.get(queueName) || { healthy: true, lastCheck: 0, consecutiveFailures: 0 }
-    
+
     if (isHealthy) {
       currentStatus.healthy = true
       currentStatus.consecutiveFailures = 0
+      // Update database health status
+      await updateQueueHealth(queueName, 'healthy').catch(err =>
+        console.warn(`Failed to update health status in database for ${queueName}:`, err)
+      )
     } else {
       currentStatus.healthy = false
       currentStatus.consecutiveFailures += 1
+      // Update database health status
+      await updateQueueHealth(queueName, 'unhealthy').catch(err =>
+        console.warn(`Failed to update health status in database for ${queueName}:`, err)
+      )
     }
-    
+
     currentStatus.lastCheck = now
     queueHealthStatus.set(queueName, currentStatus)
 
     return isHealthy
   } catch (error) {
     console.error(`Queue health check failed for ${queueName}:`, error)
-    
-    // Update failure count
+
+    // Update failure count and database
     const currentStatus = queueHealthStatus.get(queueName) || { healthy: true, lastCheck: 0, consecutiveFailures: 0 }
     currentStatus.healthy = false
     currentStatus.consecutiveFailures += 1
     currentStatus.lastCheck = Date.now()
     queueHealthStatus.set(queueName, currentStatus)
-    
+
+    // Update database health status
+    await updateQueueHealth(queueName, 'unknown').catch(err =>
+      console.warn(`Failed to update health status in database for ${queueName}:`, err)
+    )
+
     return false
   }
 }
 
 /**
- * Get next queue using load balancing strategy
+ * Get next healthy queue using load balancing strategy
  */
-export function getNextQueueByLoadBalancing(): QueueName {
-  const availableQueues: QueueName[] = ['monitoring-us-east', 'monitoring-eu-west']
-  
-  if (availableQueues.length === 0) {
-    // Emergency fallback
-    return 'monitoring-us-east'
+export async function getNextHealthyQueueByLoadBalancing(): Promise<{ name: QueueName, region: MonitorRegion } | null> {
+  const activeQueues = await getActiveQueues()
+
+  if (activeQueues.length === 0) {
+    return null
   }
 
   // Simple round-robin load balancing
-  const selectedQueue = availableQueues[currentQueueIndex % availableQueues.length]
-  currentQueueIndex = (currentQueueIndex + 1) % availableQueues.length
+  const selectedQueue = activeQueues[currentQueueIndex % activeQueues.length]
+  currentQueueIndex = (currentQueueIndex + 1) % activeQueues.length
 
-  return selectedQueue
+  return {
+    name: selectedQueue.name,
+    region: selectedQueue.region
+  }
 }
 
 /**
- * Select fallback queue when preferred queue is unavailable
+ * Get next queue using load balancing strategy (backward compatibility)
  */
-async function selectFallbackQueue(
-  preferredQueue: QueueName
-): Promise<{ queueName: QueueName; region: MonitorRegion; healthScore: number } | null> {
-  const availableQueues: QueueName[] = ['monitoring-us-east', 'monitoring-eu-west']
-  
-  // Try other healthy queues
-  for (const queueName of availableQueues) {
-    if (queueName !== preferredQueue && await checkQueueHealth(queueName)) {
-      return {
-        queueName,
-        region: getRegionForQueue(queueName),
-        healthScore: 0.8 // Good health score for healthy fallback
-      }
-    }
-  }
-
-  return null
+export async function getNextQueueByLoadBalancing(): Promise<QueueName> {
+  const healthyQueue = await getNextHealthyQueueByLoadBalancing()
+  return healthyQueue?.name || 'monitoring-us-east'
 }
+
 
 /**
  * Get region for queue name (reverse mapping)
  */
-function getRegionForQueue(queueName: QueueName): MonitorRegion {
-  const reverseMap: Record<QueueName, MonitorRegion> = {
-    'monitoring-us-east': 'us-east',
-    'monitoring-eu-west': 'eu-west'
-  }
-
-  return reverseMap[queueName] || 'us-east'
+export async function getRegionForQueue(queueName: QueueName): Promise<MonitorRegion | null> {
+  const activeQueues = await getActiveQueues()
+  const queue = activeQueues.find(q => q.name === queueName)
+  return queue?.region || null
 }
 
 /**
@@ -215,32 +228,40 @@ export function resetQueueHealthStatus(queueName?: QueueName): void {
  * Get recommended queue based on current health and load
  */
 export async function getRecommendedQueue(): Promise<QueueName> {
-  const availableQueues: QueueName[] = ['monitoring-us-east', 'monitoring-eu-west']
-  let bestQueue: QueueName = 'monitoring-us-east'
+  const activeQueues = await getActiveQueues()
+  
+  if (activeQueues.length === 0) {
+    return 'monitoring-us-east' // Emergency fallback
+  }
+
+  let bestQueue = activeQueues[0]
   let bestScore = -1
 
-  for (const queueName of availableQueues) {
-    const isHealthy = await checkQueueHealth(queueName)
-    const status = queueHealthStatus.get(queueName)
-    
+  for (const queue of activeQueues) {
+    const isHealthy = await checkQueueHealth(queue.name)
+    const status = queueHealthStatus.get(queue.name)
+
     // Calculate health score (0-1)
     let healthScore = isHealthy ? 1.0 : 0.0
-    
+
     // Penalize consecutive failures
     if (status && status.consecutiveFailures > 0) {
       healthScore *= Math.max(0.1, 1.0 - (status.consecutiveFailures * 0.2))
     }
 
-    // Prefer US East slightly for default routing
-    if (queueName === 'monitoring-us-east') {
-      healthScore += 0.1
+    // Add priority bonus (lower priority number = higher preference)
+    healthScore += (10 - queue.priority) * 0.01
+
+    // Prefer US East slightly for default routing (backward compatibility)
+    if (queue.region === 'us-east') {
+      healthScore += 0.05
     }
 
     if (healthScore > bestScore) {
       bestScore = healthScore
-      bestQueue = queueName
+      bestQueue = queue
     }
   }
 
-  return bestQueue
+  return bestQueue.name
 }

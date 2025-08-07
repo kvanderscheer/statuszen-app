@@ -12,6 +12,7 @@
 import { fetchDueMonitors, updateMonitorTimestamps } from '../../utils/scheduler/monitor-query'
 import { createMonitoringJobsBatch } from '../../utils/scheduler/job-creator'
 import { getQueueHealthStats, selectQueue, checkQueueHealth } from '../../utils/scheduler/regional-router'
+import { getActiveQueues } from '../../utils/queue/queue-service'
 import { getUpstashQueue } from '../../utils/queue/upstash-rest-queue'
 
 export default defineEventHandler(async (event) => {
@@ -20,13 +21,15 @@ export default defineEventHandler(async (event) => {
   try {
     console.log('🧪 Starting complete scheduler system test...')
 
-    // Test 1: Queue Health Checks
-    console.log('🏥 Test 1: Checking queue health...')
-    const usEastHealthy = await checkQueueHealth('monitoring-us-east')
-    const euWestHealthy = await checkQueueHealth('monitoring-eu-west')
+    // Test 1: Queue Health Checks (Dynamic)
+    console.log('🏥 Test 1: Checking queue health (dynamic discovery)...')
+    const activeQueues = await getActiveQueues()
+    console.log(`📊 Found ${activeQueues.length} active queues:`)
     
-    console.log(`✅ US East queue: ${usEastHealthy ? 'Healthy' : 'Unhealthy'}`)
-    console.log(`✅ EU West queue: ${euWestHealthy ? 'Healthy' : 'Unhealthy'}`)
+    for (const queue of activeQueues) {
+      const isHealthy = await checkQueueHealth(queue.name)
+      console.log(`✅ Queue "${queue.name}" (${queue.region}): ${isHealthy ? 'Healthy' : 'Unhealthy'}`)
+    }
 
     // Test 2: Regional Routing
     console.log('🌍 Test 2: Testing regional routing...')
@@ -100,16 +103,14 @@ export default defineEventHandler(async (event) => {
     const queueHealth = await getQueueHealthStats()
     console.log('✅ Queue health stats:', queueHealth)
 
-    // Test 6: Individual Queue Metrics
+    // Test 6: Individual Queue Metrics (Dynamic)
     console.log('📈 Test 6: Getting individual queue metrics...')
-    const usQueue = getUpstashQueue('monitoring-us-east')
-    const euQueue = getUpstashQueue('monitoring-eu-west')
     
-    const usMetrics = await usQueue.getMetrics()
-    const euMetrics = await euQueue.getMetrics()
-    
-    console.log('✅ US East metrics:', usMetrics)
-    console.log('✅ EU West metrics:', euMetrics)
+    for (const queue of activeQueues) {
+      const queueInstance = getUpstashQueue(queue.name)
+      const metrics = await queueInstance.getMetrics()
+      console.log(`✅ Metrics for "${queue.name}" (${queue.region}):`, metrics)
+    }
 
     // Test 7: Complete Scheduler Workflow Simulation
     console.log('🚀 Test 7: Simulating complete scheduler workflow...')
@@ -145,10 +146,10 @@ export default defineEventHandler(async (event) => {
       success: true,
       message: 'Complete scheduler system test completed',
       results: {
-        queueHealth: {
-          usEast: usEastHealthy,
-          euWest: euWestHealthy
-        },
+        queueHealth: activeQueues.reduce((acc: any, queue) => {
+          acc[queue.name] = queueHealth.find(h => h.queueName === queue.name)?.healthy || false
+          return acc
+        }, {}),
         regionalRouting: {
           usEast: usRouting,
           euWest: euRouting
@@ -160,11 +161,11 @@ export default defineEventHandler(async (event) => {
           queueDistribution: batchResult.queueDistribution,
           duration: batchResult.duration
         },
-        queueMetrics: {
-          usEast: usMetrics,
-          euWest: euMetrics,
-          healthStats: queueHealth
-        },
+        queueMetrics: activeQueues.reduce((acc: any, queue) => {
+          acc[queue.name] = { region: queue.region, healthy: queue.healthStatus }
+          return acc
+        }, {}),
+        healthStats: queueHealth,
         workflowSimulation: {
           success: workflowSuccess,
           error: workflowError,
