@@ -11,7 +11,7 @@ export type MonitorType = 'http' | 'https' | 'ping' | 'ssl'
 /**
  * Supported monitoring regions
  */
-export type MonitorRegion = 'us-east' | 'us-west' | 'eu-west' | 'eu-central' | 'ap-south' | 'ap-southeast'
+export type MonitorRegion = 'us-east' | 'us-west' | 'eu-west' | 'eu-central' | 'ap-south' | 'ap-southeast' | 'local'
 
 /**
  * Monitor status for UI display

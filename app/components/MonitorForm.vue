@@ -61,7 +61,7 @@ const schema = z.object({
   checkIntervalMinutes: z.number()
     .min(1, 'Check interval must be at least 1 minute')
     .max(1440, 'Check interval must be less than 24 hours'),
-  preferredRegion: z.enum(['us-east', 'us-west', 'eu-west', 'eu-central', 'ap-south', 'ap-southeast'] as const),
+  preferredRegion: z.enum(['us-east', 'us-west', 'eu-west', 'eu-central', 'ap-south', 'ap-southeast', 'local'] as const),
   config: z.record(z.any()).optional()
 })
 

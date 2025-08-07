@@ -144,7 +144,7 @@ export const intervalValidation = {
 
 export const regionValidation = {
   valid: (value: MonitorRegion): MonitorValidationError | null => {
-    const validRegions: MonitorRegion[] = ['us-east', 'us-west', 'eu-west', 'eu-central', 'ap-south', 'ap-southeast']
+    const validRegions: MonitorRegion[] = ['us-east', 'us-west', 'eu-west', 'eu-central', 'ap-south', 'ap-southeast', 'local']
     if (!validRegions.includes(value)) {
       return { field: 'preferredRegion', message: 'Invalid monitoring region' }
     }
@@ -152,7 +152,7 @@ export const regionValidation = {
   },
 
   available: (value: MonitorRegion): MonitorValidationError | null => {
-    const availableRegions: MonitorRegion[] = ['us-east', 'us-west', 'eu-west', 'eu-central']
+    const availableRegions: MonitorRegion[] = ['us-east', 'us-west', 'eu-west', 'eu-central', 'local']
     if (!availableRegions.includes(value)) {
       return { field: 'preferredRegion', message: 'Selected region is not currently available' }
     }
