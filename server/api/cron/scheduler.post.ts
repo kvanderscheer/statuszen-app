@@ -63,14 +63,13 @@ export default defineEventHandler(async (event) => {
 
     // Phase 3: Update monitor timestamps for successfully created jobs
     console.log('🕒 Phase 3: Updating monitor timestamps...')
-    const successfulMonitorIds = batchResult.results
-      .filter(result => result.success)
-      .map((result, index) => dueMonitors[index].id)
-      .filter(Boolean)
+    const successfulMonitors = batchResult.results
+      .map((result, index) => result.success ? dueMonitors[index] : null)
+      .filter(Boolean) as typeof dueMonitors
 
     let timestampUpdates = 0
-    if (successfulMonitorIds.length > 0) {
-      timestampUpdates = await updateMonitorTimestamps(successfulMonitorIds)
+    if (successfulMonitors.length > 0) {
+      timestampUpdates = await updateMonitorTimestamps(successfulMonitors)
       console.log(`✅ Updated ${timestampUpdates} monitor timestamps`)
     }
 

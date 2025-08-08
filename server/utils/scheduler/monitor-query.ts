@@ -114,39 +114,88 @@ export async function fetchDueMonitors(filters?: MonitorQueryFilters): Promise<S
  * Update scheduling timestamps for processed monitors
  */
 /**
- * Simplified updateMonitorTimestamps that accepts monitor IDs and calculates timestamps
+ * Update timestamps for monitors using their individual check intervals
  */
-export async function updateMonitorTimestamps(monitorIds: string[]): Promise<number> {
-  if (monitorIds.length === 0) return 0
-  
+export async function updateMonitorTimestamps(monitorsOrIds: string[] | SchedulableMonitor[]): Promise<number> {
+  if (monitorsOrIds.length === 0) return 0
+
   try {
     const supabase = getSupabaseServiceRoleClient()
     const now = new Date().toISOString()
-    
-    // For this demo, we'll assume 5-minute intervals
-    const nextCheck = new Date(Date.now() + 5 * 60 * 1000).toISOString()
-    
+
     let updatedCount = 0
-    
-    // Process updates individually for better error handling
-    for (const monitorId of monitorIds) {
-      try {
-        const { error } = await supabase
-          .from('monitors')
-          .update({
-            last_scheduled_at: now,
-            next_check_at: nextCheck
-          })
-          .eq('id', monitorId)
-        
-        if (!error) {
-          updatedCount++
+
+    // Check if we have monitor objects or just IDs
+    const isMonitorObjects = monitorsOrIds.length > 0 && typeof monitorsOrIds[0] === 'object'
+
+    if (isMonitorObjects) {
+      // We have full monitor objects with intervals - more efficient
+      const monitors = monitorsOrIds as SchedulableMonitor[]
+
+      for (const monitor of monitors) {
+        try {
+          // Calculate next check time using the monitor's specific interval
+          const nextCheck = calculateNextCheckTime(monitor.check_interval_minutes, new Date()).toISOString()
+
+          // Update the timestamps
+          const { error } = await supabase
+            .from('monitors')
+            .update({
+              last_scheduled_at: now,
+              next_check_at: nextCheck
+            })
+            .eq('id', monitor.id)
+
+          if (!error) {
+            updatedCount++
+          } else {
+            console.warn(`Failed to update timestamps for monitor ${monitor.id}:`, error)
+          }
+        } catch (err) {
+          console.warn(`Error processing monitor ${monitor.id}:`, err)
         }
-      } catch (err) {
-        console.warn(`Failed to update monitor ${monitorId}:`, err)
+      }
+    } else {
+      // We only have IDs - need to fetch intervals
+      const monitorIds = monitorsOrIds as string[]
+
+      for (const monitorId of monitorIds) {
+        try {
+          // First, get the monitor's check interval
+          const { data: monitor, error: fetchError } = await supabase
+            .from('monitors')
+            .select('check_interval_minutes')
+            .eq('id', monitorId)
+            .single()
+
+          if (fetchError || !monitor) {
+            console.warn(`Failed to fetch monitor ${monitorId}:`, fetchError)
+            continue
+          }
+
+          // Calculate next check time using the monitor's specific interval
+          const nextCheck = calculateNextCheckTime(monitor.check_interval_minutes, new Date()).toISOString()
+
+          // Update the timestamps
+          const { error } = await supabase
+            .from('monitors')
+            .update({
+              last_scheduled_at: now,
+              next_check_at: nextCheck
+            })
+            .eq('id', monitorId)
+
+          if (!error) {
+            updatedCount++
+          } else {
+            console.warn(`Failed to update timestamps for monitor ${monitorId}:`, error)
+          }
+        } catch (err) {
+          console.warn(`Error processing monitor ${monitorId}:`, err)
+        }
       }
     }
-    
+
     return updatedCount
   } catch (error) {
     console.error('updateMonitorTimestamps error:', error)
