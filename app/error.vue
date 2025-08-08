@@ -83,11 +83,13 @@ const clearLocalStorage = () => {
           direction="right"
           nested
         >
-          <UButton
-            label="Show Error"
-            variant="soft"
-            trailing-icon="lucide:chevron-right"
-          />
+          <template #default>
+            <UButton
+              label="Show Error"
+              variant="soft"
+              trailing-icon="lucide:chevron-right"
+            />
+          </template>
           <template #body>
             <pre class="text-left whitespace-pre-wrap">{{ error }}</pre>
           </template>

@@ -56,10 +56,19 @@ const handleRefreshMonitor = async (monitor: any) => {
 }
 
 // Load monitors on mount and when organization changes
+let refreshInterval: NodeJS.Timeout | null = null
+
 onMounted(() => {
   if (currentOrganization.value) {
     fetchMonitors()
   }
+  
+  // Auto-refresh monitors every 5 minutes
+  refreshInterval = setInterval(() => {
+    if (currentOrganization.value && !isLoading.value) {
+      fetchMonitors()
+    }
+  }, 5 * 60 * 1000)
 })
 
 watch(currentOrganization, (newOrg) => {
@@ -68,15 +77,10 @@ watch(currentOrganization, (newOrg) => {
   }
 })
 
-// Auto-refresh monitors every 5 minutes
-const refreshInterval = setInterval(() => {
-  if (currentOrganization.value && !isLoading.value) {
-    fetchMonitors()
-  }
-}, 5 * 60 * 1000)
-
 onUnmounted(() => {
-  clearInterval(refreshInterval)
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
 })
 </script>
 
@@ -127,7 +131,7 @@ onUnmounted(() => {
 
         <!-- Empty State -->
         <div
-          v-else-if="monitors.length === 0"
+          v-else-if="!monitors || monitors.length === 0"
           class="text-center py-12"
         >
           <UIcon
@@ -173,7 +177,7 @@ onUnmounted(() => {
             class="border-t border-gray-200 dark:border-gray-700"
           >
             <MonitorListItem
-              v-for="monitor in monitors"
+              v-for="monitor in (monitors || [])"
               :key="monitor.id"
               :monitor="monitor"
               @edit="handleEditMonitor(monitor)"
