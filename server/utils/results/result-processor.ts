@@ -112,15 +112,15 @@ export function transformToProcessedResult(result: MonitoringResult): ProcessedR
     
     timing: {
       result_id: resultId,
-      total_ms: result.timing.total,
-      dns_ms: result.timing.dns || null,
-      connect_ms: result.timing.connect || null,
-      ssl_ms: result.timing.ssl || null,
-      send_ms: result.timing.send || null,
-      wait_ms: result.timing.wait || null,
-      receive_ms: result.timing.receive || null,
-      first_byte_ms: extractFirstByteTime(result),
-      download_ms: extractDownloadTime(result)
+      total_ms: Math.round(result.timing.total),
+      dns_ms: result.timing.dns ? Math.round(result.timing.dns) : null,
+      connect_ms: result.timing.connect ? Math.round(result.timing.connect) : null,
+      ssl_ms: result.timing.ssl ? Math.round(result.timing.ssl) : null,
+      send_ms: result.timing.send ? Math.round(result.timing.send) : null,
+      wait_ms: result.timing.wait ? Math.round(result.timing.wait) : null,
+      receive_ms: result.timing.receive ? Math.round(result.timing.receive) : null,
+      first_byte_ms: extractFirstByteTime(result) ? Math.round(extractFirstByteTime(result)!) : null,
+      download_ms: extractDownloadTime(result) ? Math.round(extractDownloadTime(result)!) : null
     }
   }
   
