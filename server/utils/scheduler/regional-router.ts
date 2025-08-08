@@ -9,7 +9,7 @@
 
 import type { QueueName, QueueRoutingResult } from '~/types/job-queue'
 import type { MonitorRegion } from '~/types/monitor'
-import { getUpstashQueue } from '../queue/upstash-rest-queue'
+import { getQueueInstance } from '../queue/queue-adapter'
 import { getQueuesByRegion, getPreferredQueueForRegion, getActiveQueues, updateQueueHealth } from '../queue/queue-service'
 
 // Queue region mapping is now handled dynamically by queue-service
@@ -112,8 +112,8 @@ export async function checkQueueHealth(queueName: QueueName): Promise<boolean> {
       return cached.healthy
     }
 
-    // Perform actual health check using REST queue
-    const queue = getUpstashQueue(queueName)
+    // Perform actual health check using configured queue type
+    const queue = getQueueInstance(queueName)
     const isHealthy = await queue.isHealthy()
 
     // Update health status

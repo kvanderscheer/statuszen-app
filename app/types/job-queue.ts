@@ -6,7 +6,12 @@ import type { MonitorType, MonitorRegion } from './monitor'
 export type JobType = 'HTTP_CHECK' | 'HTTPS_CHECK' | 'PING_CHECK' | 'SSL_CHECK'
 
 /**
- * Job priority levels
+ * Job priority levels (for BullMQ spec compliance)
+ */
+export type BullMQJobPriority = 'low' | 'normal' | 'high' | 'urgent'
+
+/**
+ * Legacy job priority levels (keep for backward compatibility)
  */
 export type JobPriority = 1 | 2 | 3 | 4 | 5 // 1 = highest, 5 = lowest
 
@@ -281,4 +286,153 @@ export const MONITOR_TYPE_TO_JOB_TYPE: Record<MonitorType, JobType> = {
   https: 'HTTPS_CHECK',
   ping: 'PING_CHECK',
   ssl: 'SSL_CHECK'
+}
+
+// ========================================
+// BullMQ Specification-Compliant Types
+// ========================================
+
+/**
+ * BullMQ Job Metadata (common to all job types)
+ */
+export interface BullMQJobMetadata {
+  scheduledAt: string           // ISO 8601 timestamp
+  region: MonitorRegion         // Execution region
+  priority: BullMQJobPriority   // Job priority
+  monitorName: string           // Human-readable name
+  tags?: string[]               // Optional categorization tags
+}
+
+/**
+ * Base interface for all BullMQ jobs
+ */
+export interface BaseBullMQJob {
+  type: JobType
+  jobId: string
+  monitorId: string
+  organizationId: string
+  metadata: BullMQJobMetadata
+}
+
+/**
+ * HTTP Check Job (BullMQ Spec Compliant)
+ */
+export interface HttpCheckJob extends BaseBullMQJob {
+  type: 'HTTP_CHECK'
+  config: {
+    url: string
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD'
+    headers?: Record<string, string>
+    body?: string
+    timeout: number
+    followRedirects: boolean
+    maxRedirects: number
+    expectedStatusCodes: number[]
+    validateSSL: boolean
+    userAgent?: string
+  }
+}
+
+/**
+ * HTTPS Check Job (BullMQ Spec Compliant)
+ */
+export interface HttpsCheckJob extends BaseBullMQJob {
+  type: 'HTTPS_CHECK'
+  config: {
+    url: string
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD'
+    headers?: Record<string, string>
+    body?: string
+    timeout: number
+    followRedirects: boolean
+    maxRedirects: number
+    expectedStatusCodes: number[]
+    
+    // SSL-Specific Configuration
+    ssl: {
+      validateCertificate: boolean
+      validateHostname: boolean
+      checkExpiry: boolean
+      expiryWarningDays: number
+      allowSelfSigned: boolean
+      cipherSuites?: string[]
+      tlsVersions: string[]
+    }
+    
+    userAgent?: string
+  }
+}
+
+/**
+ * SSL Check Job (BullMQ Spec Compliant)
+ */
+export interface SslCheckJob extends BaseBullMQJob {
+  type: 'SSL_CHECK'
+  config: {
+    hostname: string
+    port: number
+    timeout: number
+    
+    validation: {
+      checkExpiry: boolean
+      expiryWarningDays: number
+      checkChain: boolean
+      checkRevocation: boolean
+      allowSelfSigned: boolean
+      validateHostname: boolean
+    }
+    
+    protocol: {
+      tlsVersions: string[]
+      cipherSuites?: string[]
+      sni: boolean
+    }
+  }
+}
+
+/**
+ * Ping Check Job (BullMQ Spec Compliant)
+ */
+export interface PingCheckJob extends BaseBullMQJob {
+  type: 'PING_CHECK'
+  config: {
+    host: string
+    timeout: number
+    interval: number
+    count: number
+    packetSize: number
+    ttl?: number
+    
+    thresholds: {
+      maxLatency: number
+      minSuccessRate: number
+      maxPacketLoss: number
+    }
+  }
+}
+
+/**
+ * Union type for all BullMQ job types
+ */
+export type BullMQJob = HttpCheckJob | HttpsCheckJob | SslCheckJob | PingCheckJob
+
+/**
+ * Helper to convert priority from legacy to BullMQ format
+ */
+export function convertPriorityToBullMQ(legacyPriority: JobPriority): BullMQJobPriority {
+  switch (legacyPriority) {
+    case 1: return 'urgent'
+    case 2: return 'high'
+    case 3: return 'normal'
+    case 4: 
+    case 5: return 'low'
+    default: return 'normal'
+  }
+}
+
+/**
+ * Helper to convert monitor type to BullMQ job type
+ */
+export function getJobTypeFromMonitorType(monitorType: MonitorType): JobType {
+  return MONITOR_TYPE_TO_JOB_TYPE[monitorType]
 }

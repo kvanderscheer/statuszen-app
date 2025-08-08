@@ -3,7 +3,7 @@
  * Alternative to BullMQ for REST-only Redis instances
  */
 
-import type { MonitoringJobData, JobCreationResult, BatchJobCreationResult } from '~/types/job-queue'
+import type { MonitoringJobData, JobCreationResult, BatchJobCreationResult, BullMQJob } from '~/types/job-queue'
 import type { MonitorRegion } from '~/types/monitor'
 
 export interface UpstashRestConfig {
@@ -15,9 +15,11 @@ export class UpstashRestQueue {
   private restUrl: string
   private restToken: string
   private queueName: string
+  private bullMQQueueName: string
 
   constructor(queueName: string, config: UpstashRestConfig) {
     this.queueName = queueName
+    this.bullMQQueueName = `bull:${queueName}:waiting` // BullMQ convention
     this.restUrl = config.restUrl
     this.restToken = config.restToken
   }
@@ -117,6 +119,69 @@ export class UpstashRestQueue {
       }
     } catch (error) {
       console.error('Add job error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        queueName: this.queueName as any,
+        retryable: true
+      }
+    }
+  }
+
+  /**
+   * Add a BullMQ specification-compliant job to the queue
+   */
+  async addBullMQJob(job: BullMQJob): Promise<JobCreationResult> {
+    try {
+      // BullMQ uses specific Redis key structure
+      const timestamp = Date.now()
+      const jobData = {
+        ...job,
+        timestamp,
+        delay: 0,
+        attempts: 0,
+        opts: {
+          delay: 0,
+          attempts: 3
+        }
+      }
+
+      // Use pipeline with proper BullMQ key structure
+      const commands = [
+        ['LPUSH', this.bullMQQueueName, job.jobId],
+        ['HSET', `bull:${this.queueName}:${job.jobId}`, 'data', JSON.stringify(jobData)],
+        ['HSET', `bull:${this.queueName}:${job.jobId}`, 'opts', JSON.stringify({
+          attempts: 3,
+          delay: 0,
+          timestamp
+        })],
+        // Also maintain compatibility with our custom format
+        ['HSET', `job:${job.jobId}`, 'data', JSON.stringify(jobData)],
+        ['HSET', `job:${job.jobId}`, 'queueName', this.queueName],
+        ['HSET', `job:${job.jobId}`, 'status', 'waiting']
+      ]
+
+      const response = await fetch(`${this.restUrl}/pipeline`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(commands)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Pipeline execution failed: ${response.status} ${response.statusText} - ${errorText}`)
+      }
+
+      const results = await response.json()
+      console.log('BullMQ Pipeline results:', results)
+
+      return {
+        success: true,
+        jobId: job.jobId,
+        queueName: this.queueName as any
+      }
+    } catch (error) {
+      console.error('Add BullMQ job error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

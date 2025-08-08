@@ -8,8 +8,10 @@ import { getAllQueueNames } from '../queue/queue-service'
 export interface SchedulerEnvConfig {
   redis: {
     url: string
+    username?: string
     password?: string
     db: number
+    mode?: 'direct' | 'upstash' // Controls Redis connection mode
   }
   scheduler: SchedulingConfig
   queues: {
@@ -73,8 +75,10 @@ export function getSchedulerConfig(): SchedulerEnvConfig {
   const config: SchedulerEnvConfig = {
     redis: {
       url: process.env.REDIS_URL || 'redis://localhost:6379',
+      username: process.env.REDIS_USERNAME || undefined,
       password: process.env.REDIS_PASSWORD || undefined,
-      db: parseInt(process.env.REDIS_DB || '0', 10)
+      db: parseInt(process.env.REDIS_DB || '0', 10),
+      mode: (process.env.REDIS_MODE as 'direct' | 'upstash') || 'direct' // Default to direct connection
     },
     scheduler: {
       maxMonitorsPerCycle: parseInt(process.env.SCHEDULER_MAX_MONITORS_PER_CYCLE || '1000', 10),

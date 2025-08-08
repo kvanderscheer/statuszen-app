@@ -9,7 +9,9 @@
 
 import type { JobCreationResult, BatchJobCreationResult, QueueName } from '~/types/job-queue'
 import type { SchedulableMonitor } from '~/types/scheduler'
-import { getUpstashQueue } from '../queue/upstash-rest-queue'
+import { getQueueInstance } from '../queue/queue-adapter'
+import { getBullMQQueue } from '../queue/bullmq-queue'
+import { createBullMQJobFromMonitor, validateBullMQJob } from '../queue/bullmq-job-factory'
 import { 
   createJobDataFromMonitor, 
   validateJobData, 
@@ -30,27 +32,27 @@ const deduplicationCache = new Map<string, number>()
  */
 export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<JobCreationResult> {
   try {
-    // Create job data from monitor
-    const jobData = createJobDataFromMonitor(monitor)
+    // Create BullMQ-compliant job from monitor
+    const bullmqJob = createBullMQJobFromMonitor(monitor)
 
-    // Validate job data
-    if (!validateJobData(jobData)) {
+    // Validate BullMQ job structure
+    if (!validateBullMQJob(bullmqJob)) {
       const fallbackQueue = await getRecommendedQueue()
       return {
         success: false,
-        error: 'Invalid job data',
+        error: 'Invalid BullMQ job structure',
         queueName: fallbackQueue,
         retryable: false
       }
     }
 
-    // Check for deduplication
-    const deduplicationKey = needsDeduplication(jobData, 1)
+    // Check for deduplication using BullMQ job structure
+    const deduplicationKey = `${bullmqJob.monitorId}:${Math.floor(Date.now() / 60000)}` // 1-minute window
     const now = Date.now()
     const existingTime = deduplicationCache.get(deduplicationKey)
     
     if (existingTime && (now - existingTime) < 60000) { // 1 minute window
-      console.log(`Skipping duplicate job for monitor ${monitor.id}`)
+      console.log(`Skipping duplicate job for monitor ${bullmqJob.monitorId}`)
       const fallbackQueue = await getRecommendedQueue()
       return {
         success: false,
@@ -60,15 +62,13 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
       }
     }
 
-    // Select appropriate queue
+    // Select appropriate queue and use BullMQ library
     const queueResult = await selectQueue(monitor.preferred_region)
-    const queue = getUpstashQueue(queueResult.selectedQueue)
+    const bullMQQueue = getBullMQQueue(queueResult.selectedQueue)
 
-    // Generate unique job ID
-    const jobId = generateJobId(monitor.id)
-
-    // Add job to REST queue
-    const result = await queue.addJob(jobId, jobData)
+    // Add job using real BullMQ library
+    console.log(`Adding BullMQ job ${bullmqJob.jobId} to queue ${queueResult.selectedQueue}`)
+    const result = await bullMQQueue.addBullMQJob('monitoring-check', bullmqJob)
 
     if (!result.success) {
       return {
@@ -82,11 +82,11 @@ export async function createMonitoringJob(monitor: SchedulableMonitor): Promise<
     // Update deduplication cache
     deduplicationCache.set(deduplicationKey, now)
 
-    console.log(`Created job ${jobId} for monitor ${monitor.id} in queue ${queueResult.selectedQueue}`)
+    console.log(`Created BullMQ job ${bullmqJob.jobId} for monitor ${bullmqJob.monitorId} in queue ${queueResult.selectedQueue}`)
 
     return {
       success: true,
-      jobId: jobId,
+      jobId: bullmqJob.jobId,
       queueName: queueResult.selectedQueue
     }
 

@@ -5,6 +5,7 @@
     "lucide",
     "nuxtdotjs",
     "nuxtjs",
+    "rediss",
     "reka",
     "statuszen"
   ]
