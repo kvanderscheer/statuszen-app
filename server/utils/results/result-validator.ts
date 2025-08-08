@@ -108,8 +108,8 @@ function validateFieldTypes(result: any, errors: ValidationError[]): void {
     }
   }
   
-  // UUID format validation (basic check)
-  const uuidFields = ['jobId', 'monitorId', 'organizationId']
+  // UUID format validation (basic check) - only for monitorId and organizationId
+  const uuidFields = ['monitorId', 'organizationId']
   for (const field of uuidFields) {
     if (result[field] && typeof result[field] === 'string') {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
